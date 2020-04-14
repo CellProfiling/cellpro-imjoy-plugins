@@ -105,7 +105,6 @@ const imageDataTemplate = {
   label_display_mode: null,
   uri: null,
   location: null,
-  location_selected: null,
   discarded: null
 };
 const sendDataTemplate = {
@@ -217,7 +216,6 @@ const app = new Vue({
       if(locations.length==1){
         imageData.label_display_mode = 'single'
         imageData.location = locations[0];
-        imageData.location_selected = null;
       }
       else
       { 
