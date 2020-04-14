@@ -148,8 +148,7 @@ const app = new Vue({
     current_image_data: null,
     current_image_index: 0,
     loading_cache: false,
-    extend_image: false,
-    extend_pixels: 150
+    extend_image: false
   },
   mounted(){
     this.selected_server_url = this.servers['production']
@@ -246,7 +245,9 @@ const app = new Vue({
       imageData.cell_id = cell_id;
       let image_url = "/images/" + this.current_task_name + "/" + imageData.cell_id;
       if (this.extend_image){
-        image_url += "?extend=" + this.extend_pixels 
+        image_url += "?extend=200"
+      }else{
+        image_url += "?extend=20"
       };
       const response = await this.fetchURLData(image_url)
       imageData.mask_geojson.bbox = response.bbox;
@@ -379,8 +380,7 @@ const app = new Vue({
       this.showMaskAnnotation(imageData.mask_geojson);
     },
     // extend Image
-    async extendImage(pixels_number){
-      if (pixels_number){this.extend_pixels = pixels_number};
+    async extendImage(){
       this.extend_image = true;
       this.current_image_index = this.cached_image_data.indexOf(this.current_image_data);
       const cell_id = this.current_image_data.cell_id;
