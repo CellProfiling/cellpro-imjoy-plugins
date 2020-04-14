@@ -345,7 +345,7 @@ const app = new Vue({
           }
           // add things here
         } else{api.alert("label_display_mode parameter out of range")};// waiting to have this.
-      const sub_url = "annotations/" + this.task_name + "/" + sendData.cell_id;
+      const sub_url = "annotations/" + this.current_task_name + "/" + sendData.cell_id;
       const url_post = this.selected_server_url + sub_url;
       //const url_post = base_url;
       //const data = this.user;
