@@ -336,13 +336,16 @@ const app = new Vue({
       if (this.current_image_data.label_display_mode == 'single'){
         sendData.location[this.current_image_data.location] = this.current_location_selected;
         } else if (this.current_image_data.label_display_mode == 'multiple'){
-          for (loc in this.current_image_data.location){
-            if(this.current_image_data.location[loc]==null){
-              this.current_image_data.location[loc] = false}
           sendData.location = this.current_image_data.location;
+          for (loc in sendData.location){
+            if(sendData.location[loc]==null){
+              sendData.location[loc] = false}
           }
           // add things here
-        } else{api.alert("label_display_mode parameter out of range")};
+        } else{api.alert("label_display_mode parameter out of range");
+        return };
+      // reset current_location_selected
+      this.current_location_selected = null;
       // this is the url to send the current annotation
       const sub_url = "annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
       const url_post = this.selected_server_url + sub_url;
