@@ -112,7 +112,7 @@ const sendDataTemplate = {
   cell_id: null,
   coordinates: null,
   bbox: null,
-  annotations: null
+  annotations:{}
 };
 
 const app = new Vue({
@@ -334,7 +334,13 @@ const app = new Vue({
       sendData.cell_id = this.current_image_data.cell_id;
       sendData.coordinates = this.current_image_data.mask_geojson.features[0].geometry.coordinates;
       sendData.bbox = this.current_image_data.mask_geojson.bbox;
-      sendData.annotations = null; // waiting to have this.
+      if (this.current_image_data.label_display_mode == 'single'){
+        sendData.annotations[this.current_image_data.location] = this.current_location_selected;
+        } else if (this.current_image_data.label_display_mode == 'multiple'){
+          // add things here
+        } else{api.alert("label_display_mode parameter out of range")};// waiting to have this.
+
+
       const sub_url = "annotations/" + this.task_name + "/" + sendData.cell_id;
       const url_post = this.selected_server_url + sub_url;
       //const url_post = base_url;
