@@ -107,6 +107,13 @@ const imageDataTemplate = {
   location: null,
   location_selected: null
 };
+const sendDataTemplate = {
+  user: null,
+  cell_id: null,
+  coordinates: null,
+  bbox: null,
+  annotations: null
+};
 
 const app = new Vue({
   el: '#app',
@@ -321,8 +328,16 @@ const app = new Vue({
     async uploadAnnotation(){
       // Default options are marked with *
       // this is the url to send the current annotation
-      const url_post = base_url;
-      const data = this.user;
+      const sendData = JSON.parse(JSON.stringify(sendDataTemplate));
+      sendData.user = this.user;
+      sendData.cell_id = this.current_image_data.cell_id;
+      sendData.coordinates = this.current_image_data.mask_geojson.features[0].geometry.coordinates;
+      sendData.bbox = this.current_image_data.mask_geojson.bbox;
+      sendData.annotations = null; // waiting to have this.
+      const sub_url = "annotations/" + this.task_name + "/" + sendData.cell_id;
+      const url_post = this.selected_server_url + sub_url;
+      //const url_post = base_url;
+      //const data = this.user;
       const response = await fetch(url_post, {
           method: 'POST',
           mode: 'cors',
@@ -330,7 +345,7 @@ const app = new Vue({
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(sendData)
         });
       const res= await response.json(); 
       if(!res.success){
