@@ -105,14 +105,14 @@ const imageDataTemplate = {
   label_display_mode: null,
   uri: null,
   location: null,
-  location_selected: null
+  location_selected: null,
+  discard: null
 };
 const sendDataTemplate = {
-  user: null,
-  cell_id: null,
+  discard: null,
   coordinates: null,
   bbox: null,
-  annotations:{}
+  location:null
 };
 
 const app = new Vue({
@@ -298,6 +298,9 @@ const app = new Vue({
       await this.showImage(this.cached_image_data[this.current_image_index]);
     },
     async nextImage(){
+      // test
+      api.showMessage(JSON.stringify(this.current_image_data.location))
+      // test till here
       this.current_image_index = this.cached_image_data.indexOf(this.current_image_data)
       // when we reach 70% of the the cached images
       if(this.current_image_index>this.cached_image_data.length*0.5){
@@ -330,17 +333,21 @@ const app = new Vue({
       // Default options are marked with *
       // this is the url to send the current annotation
       const sendData = JSON.parse(JSON.stringify(sendDataTemplate));
-      sendData.user = this.user;
-      sendData.cell_id = this.current_image_data.cell_id;
-      sendData.coordinates = this.current_image_data.mask_geojson.features[0].geometry.coordinates;
+      //sendData.cell_id = this.current_image_data.cell_id;
+      sendData.discard = this.current_image_data.discarded;
+      sendData.mask = this.current_image_data.mask_geojson.features;
       sendData.bbox = this.current_image_data.mask_geojson.bbox;
+      sendData.location = {};
       if (this.current_image_data.label_display_mode == 'single'){
-        sendData.annotations[this.current_image_data.location] = this.current_location_selected;
+        sendData.location[this.current_image_data.location] = this.current_location_selected;
         } else if (this.current_image_data.label_display_mode == 'multiple'){
+          for (loc in this.current_image_data.location){
+            if(this.current_image_data.location[loc]==null){
+              this.current_image_data.location[loc] = false}
+          sendData.location = this.current_image_data.location;
+          }
           // add things here
         } else{api.alert("label_display_mode parameter out of range")};// waiting to have this.
-
-
       const sub_url = "annotations/" + this.task_name + "/" + sendData.cell_id;
       const url_post = this.selected_server_url + sub_url;
       //const url_post = base_url;
