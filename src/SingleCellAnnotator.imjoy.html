@@ -106,10 +106,10 @@ const imageDataTemplate = {
   uri: null,
   location: null,
   location_selected: null,
-  discard: null
+  discarded: null
 };
 const sendDataTemplate = {
-  discard: null,
+  discarded: null,
   mask: null,
   bbox: null,
   location:null
@@ -329,7 +329,7 @@ const app = new Vue({
     async uploadAnnotation(){
       // Default options are marked with *
       const sendData = JSON.parse(JSON.stringify(sendDataTemplate));
-      sendData.discard = this.current_image_data.discarded;
+      sendData.discarded = this.current_image_data.discarded;
       sendData.mask = this.current_image_data.mask_geojson.features;
       sendData.bbox = this.current_image_data.mask_geojson.bbox;
       sendData.location = {};
