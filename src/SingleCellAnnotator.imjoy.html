@@ -328,9 +328,7 @@ const app = new Vue({
     },
     async uploadAnnotation(){
       // Default options are marked with *
-      // this is the url to send the current annotation
       const sendData = JSON.parse(JSON.stringify(sendDataTemplate));
-      //sendData.cell_id = this.current_image_data.cell_id;
       sendData.discard = this.current_image_data.discarded;
       sendData.mask = this.current_image_data.mask_geojson.features;
       sendData.bbox = this.current_image_data.mask_geojson.bbox;
@@ -344,11 +342,10 @@ const app = new Vue({
           sendData.location = this.current_image_data.location;
           }
           // add things here
-        } else{api.alert("label_display_mode parameter out of range")};// waiting to have this.
-      const sub_url = "annotations/" + this.current_task_name + "/" + sendData.cell_id;
+        } else{api.alert("label_display_mode parameter out of range")};
+      // this is the url to send the current annotation
+      const sub_url = "annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
       const url_post = this.selected_server_url + sub_url;
-      //const url_post = base_url;
-      //const data = this.user;
       const response = await fetch(url_post, {
           method: 'POST',
           mode: 'cors',
