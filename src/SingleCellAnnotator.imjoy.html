@@ -293,8 +293,8 @@ const app = new Vue({
     select: null,
     current_panel: 'login',
     user:{
-      username: "",
-      password: "",
+      username: "hao",
+      password: "GshQvF3GPzeoPAWBpalq",
       access_token: null
     },
     mask_history: [],
@@ -598,7 +598,7 @@ const app = new Vue({
       }
       imageData.exclusive_labels = response.available_labels.exclusive_labels
       if(response.available_labels.location_labels){
-        labels = Object.keys(response.available_labels.location_labels);
+        const labels = Object.keys(response.available_labels.location_labels);
         if(labels.length==1){
           imageData.label_display_mode = 'single'
           imageData.single_label = labels[0];
@@ -867,8 +867,10 @@ const app = new Vue({
           sendData.labels = this.current_image_data.location_labels;
         }
         if(typeof sendData.labels === 'object'){
+          api.alert(JSON.stringify(sendData))
+          debugger
           let noLabel = true;
-          for (loc in sendData.labels){
+          for (let loc in sendData.labels){
             if(sendData.labels[loc] === null){
               sendData.labels[loc] = false
             }
@@ -899,6 +901,7 @@ const app = new Vue({
       };
     
       // this is the url to send the current annotation
+      /*
       const sub_url = "/annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
       const url_post = this.selected_server_url + sub_url;
       const response = await fetch(url_post, {
@@ -912,7 +915,8 @@ const app = new Vue({
           body: JSON.stringify(sendData)
         });
       const res= await response.json();
-      if(res.success){
+      if(res.success)*/
+      if(true){
         this.current_image_data.mask_adjusted = false;
         this.current_image_data.labels_changed = false;
         this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.location_labels)
@@ -957,7 +961,7 @@ const app = new Vue({
     },
     showMaskAnnotation(mask_geojson){
       this.vector_source.clear()
-      features = (new GeoJSON()).readFeatures(mask_geojson)
+      const features = (new GeoJSON()).readFeatures(mask_geojson)
       this.vector_source.addFeatures(features)
       this.current_image_data.mask_adjusted = false;
       this.mask_history = []
