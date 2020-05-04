@@ -947,9 +947,6 @@ const app = new Vue({
       if(this.current_image_data.exclusive_label === type){
         this.current_image_data.exclusive_label = false;
         this.current_image_data.location_labels = Object.assign({}, this.current_image_data.saved_location_label)
-        if((this.current_task_name ==='segmentation')&&(type==='Discarded')){
-          this.current_image_data.mask_adjusted = true;
-        }
       }
       else{
         this.current_image_data.exclusive_label = type
