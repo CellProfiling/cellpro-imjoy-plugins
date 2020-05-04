@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.1.58",
+  "version": "0.1.59",
   "api_version": "0.1.7",
   "description": "Annotate images for HPA single-cell image classification",
   "icon": "extension",
@@ -293,8 +293,8 @@ const app = new Vue({
     select: null,
     current_panel: 'login',
     user:{
-      username: "hao",
-      password: "GshQvF3GPzeoPAWBpalq",
+      username: "",
+      password: "",
       access_token: null
     },
     mask_history: [],
@@ -867,8 +867,6 @@ const app = new Vue({
           sendData.labels = this.current_image_data.location_labels;
         }
         if(typeof sendData.labels === 'object'){
-          api.alert(JSON.stringify(sendData))
-          debugger
           let noLabel = true;
           for (let loc in sendData.labels){
             if(sendData.labels[loc] === null){
@@ -901,7 +899,6 @@ const app = new Vue({
       };
     
       // this is the url to send the current annotation
-      /*
       const sub_url = "/annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
       const url_post = this.selected_server_url + sub_url;
       const response = await fetch(url_post, {
@@ -915,8 +912,7 @@ const app = new Vue({
           body: JSON.stringify(sendData)
         });
       const res= await response.json();
-      if(res.success)*/
-      if(true){
+      if(res.success){
         this.current_image_data.mask_adjusted = false;
         this.current_image_data.labels_changed = false;
         this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.location_labels)
@@ -951,6 +947,9 @@ const app = new Vue({
       if(this.current_image_data.exclusive_label === type){
         this.current_image_data.exclusive_label = false;
         this.current_image_data.location_labels = Object.assign({}, this.current_image_data.saved_location_label)
+        if((this.current_task_name ==='segmentation')&&(type==='Discarded')){
+          this.current_image_data.mask_adjusted = true;
+        }
       }
       else{
         this.current_image_data.exclusive_label = type
