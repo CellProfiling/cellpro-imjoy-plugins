@@ -1002,7 +1002,7 @@ const app = new Vue({
       return JSON.stringify(k)
     },
     async setIDStyle(k){
-      const theID = await generateID(k)
+      const theID = await this.generateID(k)
       document.getElementById(theID).style.display='block'
     },
     // go to nextImage after select True/False.
@@ -1332,7 +1332,7 @@ api.export(new ImJoyPlugin())
 
       <div class="panel-body" v-for="(s, k) in statistics" :key="k">
         <div class="vertical-menu">
-          <a href="#" onclick="setIDStyle(k)">{{k}}</a>
+          <a href="#" @click="setIDStyle(k)">{{k}}</a>
         </div>
         <div id="generateID(k)" class="card" style="width: 500px;max-width: 100%; display: none;" onmouseout="this.style.display='none'">
           <div class="card-body">
