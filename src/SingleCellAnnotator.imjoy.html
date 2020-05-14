@@ -1379,9 +1379,9 @@ api.export(new ImJoyPlugin())
       <div class="panel-body">
         <br>
         <div v-for="(task, task_name) in tasks" :key="task_name">
-          <progress class="progress" style="width: 288px" :value="task.finished" :max="task.total"></progress>
+          <progress class="progress" style="width: 280px" :value="task.finished" :max="task.total"></progress>
           <br>
-          <button class="btn" style="width: 280px" @click="chooseTask(task_name)"><i class="icon icon-edit"></i>&nbsp; {{task_name}}: {{task.finished}}/{{task.total}}</button>&nbsp;&nbsp;
+          <button class="btn" style="width: 280px" @click="chooseTask(task_name)"><i class="icon icon-edit"></i>&nbsp; {{task_name}}: {{task.finished}}/{{task.total}}</button>
           <br>
           <br>
         </div>
