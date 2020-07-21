@@ -352,6 +352,7 @@ const app = new Vue({
     current_image_index: 0,
     current_well_index: 0,
     discard_well: false,
+    well_comment: [],
     load_image_index: 0,
     well_timer: {},
     loading_cache: false,
@@ -1009,6 +1010,7 @@ const app = new Vue({
       }
       this.well_timer.start_time = new Date().getTime();
       this.discard_well = this.cached_image_data[this.current_image_index].discard
+      this.well_comment = []
       await this.showImage(this.cached_image_data[this.current_image_index]);
     },
     getWellImage(the_well, iteration){
@@ -1125,6 +1127,7 @@ const app = new Vue({
       if(this.cached_image_data[this.current_image_index]){
         this.well_timer.start_time = new Date().getTime();
         this.discard_well = this.cached_image_data[this.current_image_index].discard
+        this.well_comment = []
         await this.showImage(this.cached_image_data[this.current_image_index]);
       }
     },
@@ -1242,11 +1245,11 @@ const app = new Vue({
           this.well_timer.time_elapsed = new Date().getTime() - this.well_timer.start_time
           sendData.start_time = this.well_timer.start_time
           sendData.time_elapsed = this.well_timer.time_elapsed
-          console.log('I am using the right timing')
+          if (this.well_comment.length){sendData.comment = this.well_comment}
         }
       // consider about the discard button later
         if (this.current_image_data.labels_changed&&this.discard_well){
-          sendData.discard = this.discard_well
+          sendData.labels = "Discard"
         }  
         if (this.current_image_data.labels_changed&&(!this.discard_well)){
           sendData.annotation_variation = this.annotation_variation
@@ -1307,6 +1310,7 @@ const app = new Vue({
       // this is the url to send the current annotation
       console.log(JSON.stringify(sendData))
       const sub_url = "/annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
+      console.log(sub_url)
       /*
       const url_post = this.selected_server_url + sub_url;
       const response = await fetch(url_post, {
@@ -1754,6 +1758,10 @@ const app = new Vue({
     async report(){
       const comment = await api.prompt('Please type your comment on this image to follow up. This image will be shared to the cellprofiling slack.')
       if(comment){
+        if(this.current_task_name==='covid-annotation'){
+          this.current_image_data.labels_changed = true
+          this.well_comment.push(comment)
+        }
         const screenshot = this.screenShot()
         const response = await fetch( this.selected_server_url + '/reports', {
           method: 'POST',
