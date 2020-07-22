@@ -35,7 +35,7 @@
 <script lang="javascript">
 const SERVERS = {
   'development': 'https://cuddly-moth-61.telebit.io',
-  'try_this_if_dev_fail': "https://d83aa92d8b80.ngrok.io",
+  'try_this_if_dev_fail': "https://b00dea661fc5.ngrok.io",
 }
 
 const Map = ol.Map;
@@ -1761,6 +1761,7 @@ const app = new Vue({
         if(this.current_task_name==='covid-annotation'){
           this.current_image_data.labels_changed = true
           this.well_comment.push(comment)
+          return
         }
         const screenshot = this.screenShot()
         const response = await fetch( this.selected_server_url + '/reports', {
