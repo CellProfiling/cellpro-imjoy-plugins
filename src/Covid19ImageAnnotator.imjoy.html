@@ -35,7 +35,7 @@
 <script lang="javascript">
 const SERVERS = {
   'development': 'https://cuddly-moth-61.telebit.io',
-  'try_this_if_dev_fail': "https://b00dea661fc5.ngrok.io",
+  'try_this_if_dev_fail': "https://01dc87c5915e.ngrok.io",
 }
 
 const Map = ol.Map;
@@ -1817,7 +1817,7 @@ const app = new Vue({
             screenshot: screenshot
           })
         }
-        // remove this in real branch
+        // comment out return in real work
         //return
         const response = await fetch( this.selected_server_url + '/reports', {
           method: 'POST',
