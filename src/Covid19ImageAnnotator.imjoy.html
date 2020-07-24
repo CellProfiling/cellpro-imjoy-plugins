@@ -1798,7 +1798,7 @@ const app = new Vue({
           body_content = JSON.stringify({
             report: {
               comment: comment,
-              task_id: this.current_image_data.cell_id.split('/'[0]),
+              task_id: this.current_image_data.cell_id.split('/')[0],
               discard_well: this.discard_well,
               annotation_variation: this.annotation_variation,
               Infected: infected_data,
