@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -1018,8 +1018,12 @@ const app = new Vue({
     },
     getWellImage(the_well, iteration){
       this.load_image_index = 0
+      let well_name, image_info
       for (let i=0; i<this.cached_image_data.length; i++){
-        if (this.cached_image_data[i].cell_id.includes(the_well)){
+        image_info = this.cached_image_data[i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if (well_name === the_well){
+          console.log('find the well: ' + well_name)
           this.load_image_index = i
           break
         }
@@ -1097,7 +1101,7 @@ const app = new Vue({
       }
       //this.current_well_index
       if (this.current_well_index * 2 > this.cached_well_data.length){
-        console.log("loading new wells")
+        api.alert("loading new wells, please click again in 3 second")
         await this.getNewImageBatch(this.current_task_name)
       }
       console.log("current_well_list length: " + this.current_well_data.length)
@@ -1121,7 +1125,7 @@ const app = new Vue({
         }
       }
       this.loading = false
-      if(!this.cached_image_data[this.load_image_index].cell_id.includes(the_well)){api.showMessage("Data is still loading..., please click Next again")
+      if(!this.cached_image_data[this.load_image_index].cell_id.includes(the_well)){api.alert("loading images..., please click again after 2 second")
       return
       }
       const image_index = this.load_image_index
