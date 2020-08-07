@@ -543,10 +543,12 @@ const app = new Vue({
       this.next_well_image_available = false
       const image_index = this.cached_image_data.indexOf(this.current_image_data)
       let image_info, well_name
-      image_info = this.cached_image_data[image_index + 1].cell_id.split('_')
-      well_name = image_info.slice(0, 2).join('_')
-      if(this.cached_image_data[image_index + 1]&&(well_name===this.current_well_data)){
-        this.next_well_image_available = true
+      if(this.cached_image_data[image_index + 1]){
+        image_info = this.cached_image_data[image_index + 1].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if (well_name===this.current_well_data){
+          this.next_well_image_available = true
+        }
       }
       if(this.same_well_images_indexes.length <=1 ){
         if(this.cached_image_data[image_index + 1]){
