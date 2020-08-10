@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -1057,7 +1057,7 @@ const app = new Vue({
         await this.uploadAnnotation();
         if (this.stay_at_current_well)return;
       }
-      if (this.cached_well_data.indexOf(the_well)){
+      if (this.cached_well_data.indexOf(the_well) !== -1){
         this.navigate_to_cached_well = true
         this.navigating_to_well = this.cached_well_data.indexOf(the_well)
         await this.nextWell()
@@ -1327,7 +1327,7 @@ const app = new Vue({
           }
           console.log(JSON.stringify(complete_indicator))
           if (!(complete_indicator[annotation_types[0]]&&complete_indicator[annotation_types[1]])){
-            const answer = await api.confirm("Incomplete annotation, complete it or navigate to new well without saving?")
+            const answer = await api.confirm("Incomplete annotation (either Negative/Unspecific or protein labels should be selected for each annotation group). Please press 'OK' if move on without saving, or 'Cancel' to complete the annotation'?")
             if (!answer){
               this.stay_at_current_well = true
               return
