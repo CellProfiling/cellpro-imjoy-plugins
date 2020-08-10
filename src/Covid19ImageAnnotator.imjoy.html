@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -351,6 +351,8 @@ const app = new Vue({
     previous_well_image_available: null,
     current_image_index: 0,
     current_well_index: 0,
+    navigate_to_cached_well: false,
+    navigating_to_well: null,
     discard_well: false,
     well_comment: [],
     load_image_index: 0,
@@ -1050,59 +1052,65 @@ const app = new Vue({
       if(this.current_image_data.labels_changed){
         await this.uploadAnnotation();
       }
-      //const the_well = "1672_A2"
-      const insert_index = Math.max(...this.same_well_images_indexes) + 1
-      try{
-        this.loading_cache = this.current_task_name;
-        let url = "/tasks/" + this.current_task_name + "?num=1" + "&well=" + the_well
-        const response = await this.fetchURLData(url);
-        const tasks = response.tasks;
-        if(tasks.length<=0){
-          api.showMessage('No more images in this task.')
-          return
-        }
-        // here is for covid-annotation
-        const wells = response.wells
-        if(wells.length!==1){console.log("This is the wells found: " + JSON.stringify(wells)); return}
-        console.log("This is the wells found: " + JSON.stringify(wells))
-        console.log("This is the images found: " + JSON.stringify(tasks))
-        for (let j=0; j<wells.length; j++){
-          if(this.current_task_name !== this.loading_cache){
-            console.error('Switching tasks, quit caching')
-            break
-          }
-          if(!this.current_task_name){
-            api.showProgress(0)
+      if (this.cached_well_data.indexOf(the_well)){
+        this.navigate_to_cached_well = true
+        this.navigating_to_well = this.cached_well_data.indexOf(the_well)
+        await this.nextWell()
+      }else{
+        //const the_well = "1672_A2"
+        const insert_index = Math.max(...this.same_well_images_indexes) + 1
+        try{
+          this.loading_cache = this.current_task_name;
+          let url = "/tasks/" + this.current_task_name + "?num=1" + "&well=" + the_well
+          const response = await this.fetchURLData(url);
+          const tasks = response.tasks;
+          if(tasks.length<=0){
+            api.showMessage('No more images in this task.')
             return
           }
-          this.cached_well_data.push(this.cached_well_data.splice(this.current_well_index + 1, 0, wells[j]))
+          // here is for covid-annotation
+          const wells = response.wells
+          if(wells.length!==1){console.log("This is the wells found: " + JSON.stringify(wells)); return}
+          console.log("This is the wells found: " + JSON.stringify(wells))
+          console.log("This is the images found: " + JSON.stringify(tasks))
+          for (let j=0; j<wells.length; j++){
+            if(this.current_task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            this.cached_well_data.push(this.cached_well_data.splice(this.current_well_index + 1, 0, wells[j]))
+          }
+          for(let i=0;i< tasks.length; i++){
+            if(this.current_task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            const imageData = await this.fetchCellImage(cell_id)
+            this.cached_image_data.splice(insert_index + i, 0, imageData)
+            if(!i && this.current_task_name){
+              this.current_image_data = this.cached_image_data[insert_index]
+              this.well_timer.start_time = new Date().getTime()
+              this.current_well_index++
+              this.showImage(this.cached_image_data[insert_index])
+              this.$forceUpdate();
+            }
+          }
+        }catch(e){
+          console.error(e)
         }
-        for(let i=0;i< tasks.length; i++){
-          if(this.current_task_name !== this.loading_cache){
-            console.error('Switching tasks, quit caching')
-            break
-          }
-          if(!this.current_task_name){
-            api.showProgress(0)
-            return
-          }
-          const cell_id = tasks[i];
-          api.showProgress((i+1)/tasks.length)
-          const imageData = await this.fetchCellImage(cell_id)
-          this.cached_image_data.splice(insert_index + i, 0, imageData)
-          if(!i && this.current_task_name){
-            this.current_image_data = this.cached_image_data[insert_index]
-            this.well_timer.start_time = new Date().getTime()
-            this.current_well_index++
-            this.showImage(this.cached_image_data[insert_index])
-            this.$forceUpdate();
-          }
+        finally{
+          this.loading_cache = false;
         }
-      }catch(e){
-        console.error(e)
-      }
-      finally{
-        this.loading_cache = false;
       }
     },
     async nextWell(){
@@ -1118,9 +1126,15 @@ const app = new Vue({
         await this.getNewImageBatch(this.current_task_name)
       }
       console.log("current_well_list length: " + this.current_well_data.length)
-      this.current_well_index = this.cached_well_data.indexOf(this.current_well_data)
-      console.log("current_well_index: ", this.current_well_index)
-      this.current_well_index++;
+      if (!this.navigate_to_cached_well){
+        this.current_well_index = this.cached_well_data.indexOf(this.current_well_data)
+        console.log("current_well_index: ", this.current_well_index)
+        this.current_well_index++;
+      }else{
+        this.current_well_index = this.navigating_to_well
+        this.navigate_to_cached_well = false
+        this.navigating_to_well = null
+      }
       console.log("go to well_index: ", this.current_well_index)
       const the_well = this.cached_well_data[this.current_well_index]
       console.log("go to well name: ", the_well)
