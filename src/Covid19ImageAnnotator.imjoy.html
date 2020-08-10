@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -353,6 +353,7 @@ const app = new Vue({
     current_well_index: 0,
     navigate_to_cached_well: false,
     navigating_to_well: null,
+    stay_at_current_well: null,
     discard_well: false,
     well_comment: [],
     load_image_index: 0,
@@ -1004,9 +1005,11 @@ const app = new Vue({
       await this.showImage(this.cached_image_data[this.current_image_index]);
     },
     async previousWell(){
+      this.stay_at_current_well = false;
       await this.checkNewMask()
       if(this.current_image_data.labels_changed){
         await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
       }
       this.current_well_index = this.cached_well_data.indexOf(this.current_well_data)
       if(this.current_well_index<=0){
@@ -1049,8 +1052,10 @@ const app = new Vue({
       if(!the_well){
         console.log("no well info typed. please try again")
         return}
+      this.stay_at_current_well = false;
       if(this.current_image_data.labels_changed){
         await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
       }
       if (this.cached_well_data.indexOf(the_well)){
         this.navigate_to_cached_well = true
@@ -1114,11 +1119,13 @@ const app = new Vue({
       }
     },
     async nextWell(){
+      this.stay_at_current_well = false;
       //this.loadMoreIfNeeded();
       await this.checkNewMask()
       // adjust this part later
       if(this.current_image_data.labels_changed){
         await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
       }
       //this.current_well_index
       if (this.current_well_index * 2 > this.cached_well_data.length){
@@ -1297,15 +1304,37 @@ const app = new Vue({
         if (this.current_image_data.labels_changed&&(!this.discard_well)){
           sendData.annotation_variation = this.annotation_variation
           sendData.labels = {}
+          let complete_indicator = {}
+          const annotation_types = Object.keys(this.current_image_data.labels)
           for(let k of Object.keys(this.current_image_data.labels)){
             sendData.labels[k] = {}
             sendData.labels[k].labels = {}
+            complete_indicator[k] = false
             if(this.current_image_data.labels[k].labels.exclusive_label){
+              complete_indicator[k] = true
               sendData.labels[k].labels.exclusive_label = this.current_image_data.labels[k].labels.exclusive_label;
             }
             else{
               sendData.labels[k].labels.location_labels = this.current_image_data.labels[k].labels.location_labels;
+              for (let loc in sendData.labels[k].labels.location_labels){
+                if (sendData.labels[k].labels.location_labels[loc]){
+                  complete_indicator[k] = true
+                  break
+                }
+              }
               sendData.labels[k].labels.single_cell_variation = this.current_image_data.labels[k].labels.single_cell_variation
+            }
+          }
+          console.log(JSON.stringify(complete_indicator))
+          if (!(complete_indicator[annotation_types[0]]&&complete_indicator[annotation_types[1]])){
+            const answer = await api.confirm("Incomplete annotation, complete it or navigate to new well without saving?")
+            if (!answer){
+              this.stay_at_current_well = true
+              return
+            }else{
+              console.log('you press OK!!!')
+              this.current_image_data.labels_changed = false
+              return
             }
           }
         }
