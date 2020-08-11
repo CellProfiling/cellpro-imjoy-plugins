@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -539,6 +539,8 @@ const app = new Vue({
     },
     identify_label: function(){
       this.current_image_data.discard = this.discard_well
+      // find this bug and just patch to fix, without knowing why yet
+      if (!(this.current_image_data && this.current_image_data.labels))return
       const all_labels = this.current_image_data.labels
       const well_label_changed = this.current_image_data.labels_changed
       //api.alert("Tell me if you are here")
@@ -568,8 +570,9 @@ const app = new Vue({
 
       let set_image_index
       //api.alert(JSON.stringify(this.same_well_images_indexes))
-      if (this.same_well_images_indexes[0] < image_index)this.previous_well_image_available = true
-      if (this.same_well_images_indexes[this.same_well_images_indexes.length -1] > image_index)this.next_well_image_available = true
+      if (this.same_well_images_indexes.includes(image_index - 1))this.previous_well_image_available = true
+      //if (this.same_well_images_indexes[this.same_well_images_indexes.length -1] > image_index)this.next_well_image_available = true
+      if (this.same_well_images_indexes.includes(image_index + 1))this.next_well_image_available = true
       for (let i in this.same_well_images_indexes){
         set_image_index = this.same_well_images_indexes[i]
         this.cached_image_data[set_image_index].labels = all_labels
@@ -890,6 +893,7 @@ const app = new Vue({
           return
         }
         // here is for covid-annotation
+        const filtered_wells = []
         if(task_name==='covid-annotation'){
           const wells = response.wells
           for (let j=0; j<wells.length; j++){
@@ -898,32 +902,68 @@ const app = new Vue({
               break
             }
             if(!this.current_task_name){
+              console.error("Come on, I cannot be here")
               api.showProgress(0)
               return
             }
-            this.cached_well_data.push(wells[j])
+            // ignore the well if the well is already cached
+            if (this.cached_well_data.includes(wells[j])){
+              filtered_wells.push(wells[j]); 
+              continue;
+            }else{
+              this.cached_well_data.push(wells[j])
+            }
+          }
+          for(let i=0;i< tasks.length; i++){
+            if(task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            // this part is to remove wells that already cached
+            const cell_info = cell_id.split('_')
+            const belonging_well = cell_info.slice(0, 2).join('_')
+            if (filtered_wells.includes(belonging_well)){
+              continue;
+            }else{
+              const imageData = await this.fetchCellImage(cell_id)
+              this.cached_image_data.push(imageData)
+              if(!this.current_image_data && this.current_task_name){
+                this.current_image_data = imageData
+                this.well_timer.start_time = new Date().getTime()
+                this.showImage(imageData)
+                this.$forceUpdate();
+              }
+            }
+          }
+        }else{
+          for(let i=0;i< tasks.length; i++){
+            if(task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            const imageData = await this.fetchCellImage(cell_id)
+            this.cached_image_data.push(imageData)
+            if(!this.current_image_data && this.current_task_name){
+              this.current_image_data = imageData
+              if(this.current_task_name==='covid-annotation')this.well_timer.start_time = new Date().getTime()
+              this.showImage(imageData)
+              this.$forceUpdate();
+            }
           }
         }
-        for(let i=0;i< tasks.length; i++){
-          if(task_name !== this.loading_cache){
-            console.error('Switching tasks, quit caching')
-            break
-          }
-          if(!this.current_task_name){
-            api.showProgress(0)
-            return
-          }
-          const cell_id = tasks[i];
-          api.showProgress((i+1)/tasks.length)
-          const imageData = await this.fetchCellImage(cell_id)
-          this.cached_image_data.push(imageData)
-          if(!this.current_image_data && this.current_task_name){
-            this.current_image_data = imageData
-            if(this.current_task_name==='covid-annotation')this.well_timer.start_time = new Date().getTime()
-            this.showImage(imageData)
-            this.$forceUpdate();
-          }
-        }
+
         // remove older images
         // for covid-annotation, this.cell_per_batch is actually about well
         if (task_name==='covid-annotation'){
@@ -1144,6 +1184,7 @@ const app = new Vue({
       }
       console.log("go to well_index: ", this.current_well_index)
       const the_well = this.cached_well_data[this.current_well_index]
+      if (!the_well){api.alert('No new wells, you have done all! please reload the annotation tool to double check!!'); return}
       console.log("go to well name: ", the_well)
       let iteration = 0
       await this.getWellImage(the_well, iteration)
@@ -1221,6 +1262,7 @@ const app = new Vue({
           if(!this.cached_image_data[image_index + i])break;
           image_info = this.cached_image_data[image_index + i].cell_id.split('_')
           well_name = image_info.slice(0, 2).join('_')
+          console.log('this.current_well_data::: ' + this.current_well_data)
           if(well_name===this.current_well_data){
             this.same_well_images_indexes.push(image_index + i)
           }
@@ -2091,7 +2133,8 @@ api.export(new ImJoyPlugin())
             <button :disabled="current_well_index<=0  || loading" class="btn transparent-btn" @click="previousWell()"><i class="icon icon-back"></i>&nbsp;<b>Back</b></button>
             <button :disabled="loading" class="btn transparent-btn" @click="saveAnnotation()">&nbsp;<b>Save</b></button>
             <button class="btn transparent-btn" :class="{'exclusive-label-btn': discard_well}" :disabled="loading" @click="toggleCovidDiscardLabel()">&nbsp;<b>Discard</b></button>
-            <button :disabled="current_well_index>=cached_well_data.length  || loading" class="btn transparent-btn" @click="nextWell()"><b>Next</b>&nbsp;<i class="icon icon-forward"></i></button>
+            <!--remove current_well_index>=cached_well_data.length ||-->
+            <button :disabled="loading" class="btn transparent-btn" @click="nextWell()"><b>Next</b>&nbsp;<i class="icon icon-forward"></i></button>
           </div>
         </div>
       </div>
