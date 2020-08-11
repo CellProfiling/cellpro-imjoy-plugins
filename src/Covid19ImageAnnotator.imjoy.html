@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -662,6 +662,26 @@ const app = new Vue({
           this.collectChartData.splice(0, 0, [key+task_name, value])
         }
       }
+    },
+    async releaseUnfinished(){
+      // release to do list
+      const response = await fetch(this.selected_server_url + "/release", {
+          method: 'PATCH',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+        });
+      const res= await response.json();
+      if(res.success){
+        await this.showReport();
+      }
+      else{
+        alert('Failed to release unfinished todo tasks, error: ' + res.error);
+        throw new Error('Failed to release unfinished todo tasks.')
+      };
     },
     async drawChart() {
       const idName = this.showStatKeys.idName;
@@ -2100,8 +2120,9 @@ api.export(new ImJoyPlugin())
           <input type="checkbox" v-model="draw_mask_mode" @change="drawMaskModeChanged">
           <i class="form-icon"></i> <span class="hide-on-mobile">Redraw Mask</span>
         </label> -->
-        <button style="background-color:transparent" class="btn" title="navigate to well" @click="goToWell()">&nbsp;Well</button>
-        <button style="background-color:transparent" class="btn" title="report" @click="report()"><i class="icon icon-share"></i></button>&nbsp;&nbsp;
+        <button v-if="user.role === 'admin'" style="background-color:transparent" class="btn release-unfinished-btn" title="release preserved to do list" @click="releaseUnfinished()"><b>ReleaseUnfinished</b>&nbsp;&nbsp;&nbsp;</button>
+        <button style="background-color:transparent" class="btn" title="navigate to well" @click="goToWell()">&nbsp;GoToWell</button>
+        <button style="background-color:transparent" class="btn" title="report&followup" @click="report()"><i class="icon icon-share"></i></button>&nbsp;&nbsp;
         <label class="form-switch " v-show="current_task_name === 'segmentation'">
           <input type="checkbox" v-model="freehand_mode" @change="freehandChanged">
           <i class="form-icon"></i> <span class="hide-on-mobile">Freehand</span>
@@ -2377,13 +2398,16 @@ api.export(new ImJoyPlugin())
   .exclusive-label-btn{
     background-color: rgb(248, 27, 2)!important;
   }
+  .release-unfinished-btn:hover{
+    background-color: rgb(223, 129, 85)!important;
+  }
   .exclusive-covid-label-btn{
     background-color: rgb(146, 49, 49)!important;
   }
   .highlight-btn{
     background-color: white!important;
   }
-  .label-btn:hover, .label-btn:focus, .covid-label-btn:hover, .covid-label-btn:focus, .scv-label-btn:hover, .scv-label-btn:focus, .exclusive-btn:hover, .exclusive-btn:focus{
+  .release-unfinished-btn, .release-unfinished-btn:focus, .label-btn:hover, .label-btn:focus, .covid-label-btn:hover, .covid-label-btn:focus, .scv-label-btn:hover, .scv-label-btn:focus, .exclusive-btn:hover, .exclusive-btn:focus{
     background-color:rgba(255, 255, 255, 0.42);
   }
   .selected-label-btn{
