@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -2075,7 +2075,7 @@ api.export(new ImJoyPlugin())
         </label>
         <label v-for="ch in channel_settings" :key="ch" v-show="ch.name!=='merged'" class="form-checkbox channel-controls">
           <input v-model="ch.show" :name="ch.name" @change="channelSettingsUpdated" type="checkbox">
-          <i class="form-icon"></i> {{ch.name=='ER'? 'Virus': ch.name}}
+          <i class="form-icon"></i> {{ch.name=='Microtubule'? 'SARS-CoV-2': ch.name}}
         </label>
         <button :disabled="loading" v-show="current_task_name === 'segmentation'" :class="{'exclusive-label-btn': current_image_data.exclusive_label === 'Discard'}" class="btn btn-sm small-btn channel-controls" @click="toggleExclusiveLabels('Discard')">Discard</button>
         <button :disabled="!mask_history||mask_history.length<=0" v-show="current_task_name === 'segmentation'" class="btn btn-sm small-btn channel-controls" @click="undoAnnotation()">Undo</button>
