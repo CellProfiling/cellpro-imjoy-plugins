@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -914,6 +914,9 @@ const app = new Vue({
         let url = "/tasks/" + task_name + "?num=" + this.cell_per_batch        
         if(init){
           url = url + '&init=1'
+          // assume each init means there are no data cached
+          this.cached_well_data = []
+          this.cached_image_data = []
         }
         const response = await this.fetchURLData(url);
         const tasks = response.tasks;
@@ -2099,7 +2102,7 @@ api.export(new ImJoyPlugin())
     </div>
 
     <div class="panel statistics-panel" v-if="current_panel=='statistics'&&statistics">
-      <button v-if="user.role === 'admin'" style="background-color:transparent" class="btn release-unfinished-btn" title="release preserved to do list" @click="releaseHeld()"><b>ReleaseHeld</b>&nbsp;&nbsp;&nbsp;</button>
+      <button v-if="user.role === 'admin'" style="right: 144px; top: 20px; position: absolute; font: 11px arial,serif;" title="release held tasks by other annotators" class="btn-sm release-unfinished-btn" @click="releaseHeld()"><b>ReleaseHeld</b></button>&nbsp;&nbsp;
       <button style="right: 94px; top: 10px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load reports" @click="showReport()"><b>Rep</b></button>&nbsp;&nbsp;
       <button style="right: 52px; top: 12px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load statistics" @click="showStatistics()"><b>Stats</b></button>&nbsp;&nbsp;
       <button style="right: 10px; top: 10px; position: absolute;" class="btn btn-action s-circle" title="home" @click="home()"><i class="icon icon-cross"></i></button>&nbsp;&nbsp;
