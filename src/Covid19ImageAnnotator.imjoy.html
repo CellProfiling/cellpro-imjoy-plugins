@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -2219,8 +2219,8 @@ api.export(new ImJoyPlugin())
           </div>
         </div>
         <span v-show="!hide_controls" class="h3 floating-label">
-          <h6>{{current_image_data.cell_id.split('/')[0]}} (<span>annotation_variation: <b>{{annotation_variation}}</b></span>)</h6>
           <h6>{{identify_label}}</h6>
+          <h5>{{current_image_data.cell_id.split('/')[0]}} (<span>annotation_variation: <b>{{annotation_variation}}</b></span>)</h5>
           <button class="btn btn-sm channel-controls scv-label-btn" :disabled="discard_well||loading" :class="{'selected-scv-label-btn': whole_scv_spatial}" @click="toggleCovidWholeSCV('scv_spatial')">SCV_Spatial</button>
           <button class="btn btn-sm channel-controls scv-label-btn" :disabled="discard_well||loading" :class="{'selected-scv-label-btn': whole_scv_intensity}" @click="toggleCovidWholeSCV('scv_intensity')">SCV_Intensity</button>
         </span>
