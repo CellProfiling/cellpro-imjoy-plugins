@@ -672,7 +672,7 @@ const app = new Vue({
         }
       }
     },
-    async releaseHolded(){
+    async releaseHeld(){
       // release to do list
       const response = await fetch(this.selected_server_url + "/release", {
           method: 'PATCH',
@@ -918,7 +918,7 @@ const app = new Vue({
         const response = await this.fetchURLData(url);
         const tasks = response.tasks;
         if(tasks.length<=0){
-          api.alert('No more images to load in this task! If the progress bar shows as incomplete status, ask an admin to release holded todo tasks(press ReleaseHolded button in Statistics&&Reports panel)!')
+          api.alert('No more images to load in this task! If the progress bar shows as incomplete status, ask an admin to release todo tasks held by other annotators (press ReleaseHeld button in Statistics&&Reports panel)!')
           return
         }
         // here is for covid-annotation
@@ -1215,7 +1215,7 @@ const app = new Vue({
       }
       console.log("go to well_index: ", this.current_well_index)
       const the_well = this.cached_well_data[this.current_well_index]
-      if (!the_well){api.alert("limited wells available, finish your remaining tasks first and then click next well to load more! If this message pops up again, relaunch the annotation tool to double check progress status?! If not all done, go to Statistics&&Reports panel and press ReleaseHolded button to release holded tasks!!"); return}
+      if (!the_well){api.alert("limited wells available, finish your remaining tasks first and then click next well to load more! If this message pops up again, relaunch the annotation tool to double check progress status?! If not all done, go to Statistics&&Reports panel and press ReleaseHeld button to release held tasks!!"); return}
       console.log("go to well name: ", the_well)
       let iteration = 0
       await this.getWellImage(the_well, iteration)
@@ -2099,7 +2099,7 @@ api.export(new ImJoyPlugin())
     </div>
 
     <div class="panel statistics-panel" v-if="current_panel=='statistics'&&statistics">
-      <button v-if="user.role === 'admin'" style="background-color:transparent" class="btn release-unfinished-btn" title="release preserved to do list" @click="releaseHolded()"><b>ReleaseHolded</b>&nbsp;&nbsp;&nbsp;</button>
+      <button v-if="user.role === 'admin'" style="background-color:transparent" class="btn release-unfinished-btn" title="release preserved to do list" @click="releaseHeld()"><b>ReleaseHeld</b>&nbsp;&nbsp;&nbsp;</button>
       <button style="right: 94px; top: 10px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load reports" @click="showReport()"><b>Rep</b></button>&nbsp;&nbsp;
       <button style="right: 52px; top: 12px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load statistics" @click="showStatistics()"><b>Stats</b></button>&nbsp;&nbsp;
       <button style="right: 10px; top: 10px; position: absolute;" class="btn btn-action s-circle" title="home" @click="home()"><i class="icon icon-cross"></i></button>&nbsp;&nbsp;
