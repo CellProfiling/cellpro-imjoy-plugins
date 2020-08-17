@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -560,6 +560,26 @@ const app = new Vue({
           this.next_well_image_available = true
         }
       }
+      // from here, move the same_well_images_indexes to here
+      this.same_well_images_indexes = [image_index]
+      for (let i=1; i<this.cached_image_data.length; i++){
+        if(!this.cached_image_data[image_index + i])break;
+        image_info = this.cached_image_data[image_index + i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if(well_name===this.current_well_data){
+          this.same_well_images_indexes.push(image_index + i)
+        }
+      }
+      for (let i=1; i<image_index+1; i++){
+        image_info = this.cached_image_data[image_index - i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if(well_name === this.current_well_data){
+          this.same_well_images_indexes.push(image_index - i)
+        }
+      }
+      this.same_well_images_indexes.sort()
+      // till here
+
       if(this.same_well_images_indexes.length <=1 ){
         if(this.cached_image_data[image_index + 1]){
           image_info = this.cached_image_data[image_index + 1].cell_id.split('_')
@@ -1291,27 +1311,6 @@ const app = new Vue({
       if(this.current_task_name==='covid-annotation'){
         const well_info = imageData.cell_id.split('_')
         this.current_well_data = well_info.slice(0, 2).join('_')
-        const image_index = this.cached_image_data.indexOf(imageData)
-        //api.alert(image_index)
-        this.same_well_images_indexes = [image_index]
-        for (let i=1; i<this.cached_image_data.length; i++){
-          if(!this.cached_image_data[image_index + i])break;
-          image_info = this.cached_image_data[image_index + i].cell_id.split('_')
-          well_name = image_info.slice(0, 2).join('_')
-          console.log('this.current_well_data::: ' + this.current_well_data)
-          if(well_name===this.current_well_data){
-            this.same_well_images_indexes.push(image_index + i)
-          }
-        }
-        for (let i=1; i<image_index+1; i++){
-          image_info = this.cached_image_data[image_index - i].cell_id.split('_')
-          well_name = image_info.slice(0, 2).join('_')
-          if(well_name === this.current_well_data){
-            this.same_well_images_indexes.push(image_index - i)
-          }
-        }
-        this.same_well_images_indexes.sort()
-        console.log("current_well_index " + this.cached_well_data.indexOf(this.current_well_data)+ " image index "+ image_index + ":" + JSON.stringify(this.same_well_images_indexes))
       }      
       this.current_image_data = imageData;
       imageData.start_time = new Date().getTime();
