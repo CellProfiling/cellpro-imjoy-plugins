@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.19",
+  "version": "0.2.33",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -2101,6 +2101,7 @@ api.export(new ImJoyPlugin())
     </div>
 
     <div class="panel statistics-panel" v-if="current_panel=='statistics'&&statistics">
+      <div><a :href="selected_server_url + '/download-results'" download="annotation_results.csv" style="right: 234px; top: 20px; position: absolute; font: 14px arial,serif;"><b>DownloadResult</b></a></div> 
       <button v-if="user.role === 'admin'" style="right: 144px; top: 20px; position: absolute; font: 11px arial,serif;" title="release held tasks by other annotators" class="btn-sm release-unfinished-btn" @click="releaseHeld()"><b>ReleaseHeld</b></button>&nbsp;&nbsp;
       <button style="right: 94px; top: 10px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load reports" @click="showReport()"><b>Rep</b></button>&nbsp;&nbsp;
       <button style="right: 52px; top: 12px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load statistics" @click="showStatistics()"><b>Stats</b></button>&nbsp;&nbsp;
