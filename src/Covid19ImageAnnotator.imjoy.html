@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.37",
+  "version": "0.2.38",
   "api_version": "0.1.7",
   "description": "Annotate images for Covid image classification",
   "icon": "extension",
@@ -2092,7 +2092,7 @@ api.export(new ImJoyPlugin())
       <div class="panel-body">
         <br>
         <!--here only show covid annotation-->
-        <div v-for="(task, task_name) in tasks" v-if="task_name==='covid-annotation'":key="task_name">
+        <div v-for="(task, task_name) in tasks" v-if="(task_name==='covid-annotation')||(task_name==='segmentation')":key="task_name">
           <progress class="progress" style="width: 280px" :value="task.finished" :max="task.total"></progress>
           <br>
           <button class="btn" style="width: 280px" @click="chooseTask(task_name)"><i class="icon icon-edit"></i>&nbsp; {{task_name}}: {{task.finished}}/{{task.total}}</button>
