@@ -8,7 +8,7 @@
   "type": "window",
   "tags": [],
   "ui": "",
-  "version": "0.2.41",
+  "version": "0.2.42",
   "api_version": "0.1.7",
   "description": "Image annotator for Covid19 interacting host proteins mapping",
   "icon": "extension",
@@ -1159,6 +1159,7 @@ const app = new Vue({
         return
       }
       const insert_index = this.current_image_index  + 1
+      this.loading_cache = this.current_task_name
       for(let i=0;i< tasks.length; i++){
         if(this.current_task_name !== this.loading_cache){
           console.error('Switching tasks, quit caching')
