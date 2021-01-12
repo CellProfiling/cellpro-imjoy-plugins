@@ -1,0 +1,2613 @@
+<docs lang="markdown">
+[TODO: write documentation for this plugin.]
+</docs>
+
+<config lang="json">
+{
+  "name": "Covid19ImageAnnotator",
+  "type": "window",
+  "tags": [],
+  "ui": "",
+  "version": "0.0.1",
+  "api_version": "0.1.7",
+  "description": "Image annotator for Covid19 interacting host proteins mapping",
+  "icon": "extension",
+  "inputs": null,
+  "outputs": null,
+  "env": "",
+  "permissions": [],
+  "requirements": [
+      "https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js",
+      "https://static.imjoy.io/spectre.css/spectre.min.css",
+      "https://static.imjoy.io/spectre.css/spectre-exp.min.css",
+      "https://static.imjoy.io/spectre.css/spectre-icons.min.css",
+      "https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/css/ol.css",
+      "https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/build/ol.js",
+      "https://www.gstatic.com/charts/loader.js",
+      "https://www.google.com/jsapi"
+  ],
+  "dependencies": [],
+  "defaults": {"fullscreen": true},
+  "cover": "https://raw.githubusercontent.com/haoxusci/covid19ai-models/master/images/covid_image_annotator.gif",
+  "runnable": true
+}
+</config>
+
+<script lang="javascript">
+const SERVERS = {
+  'production': 'https://annotation.haoxu.org',
+  'localhost': "http://localhost:8939",
+}
+
+const Map = ol.Map;
+const View = ol.View;
+const Draw = ol.interaction.Draw;
+const Modify = ol.interaction.Modify;
+const Select = ol.interaction.Select;
+const defaultInteractions = ol.interaction.defaults;
+const TileLayer = ol.layer.Tile;
+const Style = ol.style.Style;
+const Fill = ol.style.Fill;
+const Stroke = ol.style.Stroke;
+const Text = ol.style.Text;
+const VectorLayer = ol.layer.Vector;
+const OSM = ol.source.OSM;
+const VectorSource = ol.source.Vector;
+const MousePosition = ol.control.MousePosition;
+const LayerSwitcher = ol.control.LayerSwitcher;
+const Zoomify = ol.source.Zoomify;
+const Static = ol.source.ImageStatic;
+const ImageLayer = ol.layer.Image;
+const Projection = ol.proj.Projection;
+const createStringXY = ol.coordinate.createStringXY;
+const DragAndDrop = ol.interaction.DragAndDrop;
+const GeoJSON = ol.format.GeoJSON;
+const RasterSource = ol.source.Raster;
+const getWidth = ol.extent.getWidth;
+const getCenter = ol.extent.getCenter;
+const Layer = ol.layer.Layer;
+const fromLonLat = ol.proj.fromLonLat;
+const toLonLat = ol.proj.toLonLat;
+const CircleStyle = ol.style.Circle;
+const defaultControls = ol.control.defaults;
+
+function mobileAndTabletcheck() {
+  var check = false;
+  (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+  return check;
+};
+
+async function getMeta(url) {
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+async function getImageData(url) {
+  return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0,0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+        const data = new Uint8Array(new ArrayBuffer(canvas.width * canvas.height))
+        for(let i=0;i<canvas.width*canvas.height;i++){
+          data[i] = imgData[i*4];
+        }
+        resolve({data: data, width: canvas.width, height: canvas.height})
+      };
+      img.onerror = reject;
+      img.crossOrigin = "Anonymous";
+      img.src = url;
+  });
+};
+async function composeChannels(channels, channel_settings, alpha, brightness){
+  //if(this.current_task_name==='covid-annotation'){
+  //      if (Object.keys(channel_settings).includes('Mask')){
+  //        delete channel_settings['Mask']
+  //      }
+  //    }
+  const color_channels = [
+    ['Microtubule', 'ER'],
+    ['Protein', 'ER'],
+    ['Nuclei']
+  ]
+  //['Mask'] @hao, this is something to be fixed for other modes
+  // replace channel name with data
+  for(let i=0;i<color_channels.length;i++){
+    for(let j=0;j<color_channels[i].length;j++){
+      const ch_name = color_channels[i][j]
+      if(channel_settings[ch_name].show){
+        color_channels[i][j] = await getImageData(channels[ch_name])
+      }
+    }
+    // filter out empty channels
+    color_channels[i] = color_channels[i].filter(item=>typeof(item)!=='string')
+  }
+  // set canvas
+  const canvas = document.createElement('canvas')
+  for(let i=0;i<color_channels.length;i++){
+    if(color_channels[i].length){
+      canvas.width = color_channels[i][0].width
+      canvas.height = color_channels[i][0].height
+      break
+    }
+  }
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const channel_offset = canvas.width * canvas.height * 4
+  let i, j, v, src, pixel_index;
+  const data = imgData.data
+  // set data channels
+  if(alpha<0) alpha = 0;
+  if(alpha>1) alpha = 1;
+  brightness = brightness || 1.0;
+  for(j=0;j<3;j++){
+    if(!color_channels[j].length){
+      continue
+    }
+    if(brightness===1){
+      for(let k=0; k<color_channels[j].length; k++){
+        src = color_channels[j][k].data;
+        for(i=0;i<channel_offset;i++){
+            pixel_index = i*4+j
+            v = data[pixel_index];
+            v = v + src[i]
+            data[pixel_index] = v>255?255:v;
+        }
+      }
+    }else{
+      for(let k=0; k<color_channels[j].length; k++){
+        src = color_channels[j][k].data;
+        for(i=0;i<channel_offset;i++){
+            pixel_index = i*4+j
+            v = data[pixel_index];
+            v = v + src[i]
+            if(brightness!==1) v = v*brightness;
+            data[pixel_index] = v>255?255:parseInt(v);
+        }
+      }
+    }
+  }
+  // set alfa channel for mask
+  if(color_channels.length==4 && color_channels[3].length){
+    src = color_channels[3][0].data;
+    for(i=0;i<channel_offset;i++){
+      if(src[i]>0){
+        data[i*4+3] = parseInt(alpha*255);
+      }
+      else{
+        data[i*4+3] = 255;
+      }
+    }
+  }else{
+    for(i=0;i<channel_offset;i++){
+    data[i*4+3] = 255; 
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return {url: canvas.toDataURL(), width: canvas.width, height: canvas.height}
+}
+
+const imageDataTemplate = {
+  extend: null,
+  cell_id: null,
+  mask_geojson: null,
+  label_display_mode: null,
+  channels: null,
+  label: null,
+  exclusive_label: false,
+  mask_adjusted: false,
+  label_changed: false,
+  brightness: 1.0,
+};
+
+const LIMS_LOCATION_LABELS = {
+    "Nuclear localizations":
+    [
+        "Nucleoplasm",
+        "Nuc membrane",
+        "Nucleoli",
+        "Nuc Fib C",
+        "Nucl speckles",
+        "Nuc bodies",
+        "Kinetochore",
+        "Mit chrom",
+    ],
+  "Secretory":
+    [
+        "ER",
+        "Golgi",
+        "Vesicles",
+        "Peroxisomes",
+        "Endosomes",
+        "Lysosomes",
+    ],
+  "Cytoskeletal localizations":
+    [
+        "Int Fil",
+        "Actin Fil",
+        "Focal Adh",
+        "MTs",
+        "MT ends",
+        "Cyt bridge",
+        "Midbody",
+        "Midbody ring",
+        "Cl furrow",
+        "Spindle",
+        "Primary cilia",
+        "Satellites",
+        "Centrosome",
+    ],
+  "Others":
+    [
+        "Lipid drop",
+        "PM",
+        "Junctions",
+        "Mitochondria",
+        "Aggresome",
+        "Cytosol",
+        "Cyt bodies",
+        "R&R",
+  ],
+}
+
+const LIMS_TO_IF_CSV = {
+  "Nucleoplasm": "Nucleoplasm",
+  "Nuc membrane": "Nuclear membrane",
+  "Nucleoli": "Nucleoli",
+  "Nuc Fib C": "Nucleoli fibrillar center",
+  "Nucl speckles": "Nuclear speckles",
+  "Nuc bodies": "Nuclear bodies",
+  "Kinetochore": null,
+  "Mit chrom": "Mitotic chromosome",
+
+  "ER": "Endoplasmic reticulum",
+  "Golgi": "Golgi apparatus",
+  "Vesicles": "Vesicles",
+  "Peroxisomes": "Peroxisomes",
+  "Endosomes": "Endosomes",
+  "Lysosomes": "Lysosomes",
+
+  "Int Fil": "Intermediate filaments",
+  "Actin Fil": "Actin filaments",
+  "Focal Adh": "Focal adhesion sites",
+  "MTs": "Microtubules",
+  "MT ends": "Microtubule ends",
+  "Cyt bridge": "Cytokinetic bridge",
+  "Midbody": "Midbody",
+  "Midbody ring": "Midbody ring",
+  "Cl furrow": "Cleavage furrow",
+  "Spindle": "Mitotic spindle",
+  "Primary cilia": null,
+  "Satellites": "Centriolar satellite",
+  "Centrosome": "Centrosome",
+  "Lipid drop": "Lipid droplets",
+  "PM": "Plasma membrane",
+  "Junctions": "Cell Junctions",
+  "Mitochondria": "Mitochondria",
+  "Aggresome": "Aggresome",
+  "Cytosol": "Cytosol",
+  "Cyt bodies": "Cytoplasmic bodies",
+  "R&R": "Rods & Rings",    
+}
+
+const app = new Vue({
+  el: '#app',
+  data: {
+    viewProxy: null,
+    renderWindow: null,
+    interactor: null,
+    renderer: null,
+    drawInteraction: null,
+    itkInteraction: null,
+    draw_mask_mode: true,
+    freehand_mode: true,
+    vector_source: null,
+    selected_feature: null,
+    loading: false,
+    // develop image parsing
+    selected_server_url: 'production',
+    servers: SERVERS,
+    select: null,
+    current_panel: 'login',
+    user:{
+      username: "",
+      password: "",
+      access_token: null
+    },
+    mask_history: [],
+    channel_settings: {},
+    alpha: 0.2,
+    hide_controls: false,
+    show_segmentation: true,
+    default_extend_value: 0,
+    current_extend_value: 0,
+    statistics: {},
+    showStatKeys: {
+      idName: null,
+      theData: null,
+    },
+    collectChartData:[],
+    reports: {},
+    // show reports or statistics in statistics panel, [Reports, Statistics]
+    show_reports_statistics: null,
+    // from here this is communication to backend, to develop/activate
+    tasks: null,
+    current_task_name: null,
+    cell_per_batch: 4,
+    cached_image_data: [],
+    // this is for covid-annotation use
+    cached_well_data: [],
+    current_image_data: null,
+    current_well_data: null,
+    same_well_images_indexes: [],
+    next_well_image_available: null,
+    previous_well_image_available: null,
+    current_image_index: 0,
+    current_well_index: 0,
+    navigate_to_cached_well: false,
+    navigating_to_well: null,
+    stay_at_current_well: null,
+    // download times
+    download_counts: new Date().getTime(),
+    download_fov: null,
+    // whole annotation scv spatial and intensity
+    whole_scv_spatial: false,
+    whole_scv_intensity: false,
+    discard_well: false,
+    well_comment: [],
+    load_image_index: 0,
+    well_timer: {},
+    loading_cache: false,
+    innerHeight: '100vh',
+    isMobile: false,
+    version: null,
+    current_displayed_image: null,
+    LIMS_LOCATION_LABELS: LIMS_LOCATION_LABELS,
+    LIMS_TO_IF_CSV: LIMS_TO_IF_CSV,
+    LIMS_VALUES: Object.values(LIMS_TO_IF_CSV),
+    // config url
+    config_data: null,
+    config_url: "https://raw.githubusercontent.com/haoxusci/imjoy-plugin-config/master/config/Covid19ImageAnnotator.imjoy.config.json"
+  },
+  mounted(){
+    this.$nextTick(async()=>{
+      this.version = await api.getConfig('_version');
+    })
+    this.isMobile = mobileAndTabletcheck()
+    window.onresize = ()=>{
+      document.body.height = window.innerHeight;
+      this.innerHTML = window.innerHeight + 'px';
+      this.$forceUpdate()
+    }
+    window.onresize();
+    this.selected_server_url = this.servers['production']
+    document.addEventListener('keydown', async (event)=>{
+      if(this.current_panel==='imageviewer'){
+        if(event.shiftKey && event.code ==='Equal' || ['+', 'KeyP', 'Plus', 'NumpadAdd'].includes(event.code)){
+          this.current_image_data.brightness = this.current_image_data.brightness * 1.3
+          this.displayMap(this.current_image_data.channels, this.channel_settings, this.current_image_data.brightness);
+        }
+        else if(['-', 'Minus', 'KeyO', 'NumpadSubtract'].includes(event.code)){
+          this.current_image_data.brightness = this.current_image_data.brightness / 1.3
+          this.displayMap(this.current_image_data.channels, this.channel_settings, this.current_image_data.brightness);
+        }
+        else if(event.code === 'KeyT'){
+          if(this.current_image_data.label_display_mode==='single'){
+            this.selectLabel(true)
+          }
+        }
+        else if(event.code === 'KeyF'){
+          if(this.current_image_data.label_display_mode==='single'){
+            this.selectLabel(false)
+          }
+        }
+        else if((event.code === 'ArrowRight')&&this.next_well_image_available){
+          this.nextImage()
+        }
+        else if((event.code === 'ArrowLeft')&&this.previous_well_image_available){
+          this.previousImage()
+        }
+        else if(event.code === 'KeyD'){
+          
+          this.toggleExclusiveLabels('Discard')
+        }
+        else if(event.code === 'KeyS'){
+          if(this.current_image_data.labels_changed){
+            this.uploadAnnotation();
+          }
+          if(this.current_image_data.mask_adjusted){
+            this.saveMaskAnnotation()
+          }
+        }
+        else if(event.code === 'Escape'){
+          this.home()
+        }
+        else if(event.code === 'KeyE'){
+          this.current_extend_value = parseInt(await api.prompt("Please enter a pixel number for extending the image area surrounding the cell:", "300"))
+          if( !this.current_extend_value || this.current_extend_value<=0){
+            this.current_extend_value = this.default_extend_value
+          }
+          else if(this.current_extend_value>2048){
+            this.current_extend_value = this.default_extend_value
+          }
+          this.reloadImage()
+        }
+        // alpha channel mask
+        else if(event.code === 'KeyA'){
+          if (this.current_task_name=='covid-annotation'){
+            api.alert('No Mask')
+            return;}
+          if(this.channel_settings['Mask'].show)
+            this.channel_settings['Mask'].show = false;
+          else
+            this.channel_settings['Mask'].show = true;
+          this.displayMap(this.current_image_data.channels, this.channel_settings);
+        }
+        // ER
+        else if(event.code === 'KeyY'){
+          if(this.channel_settings['ER'].show)
+            this.channel_settings['ER'].show = false;
+          else
+            this.channel_settings['ER'].show = true;
+          this.displayMap(this.current_image_data.channels, this.channel_settings);
+        }
+        // Microtubule
+        else if(event.code === 'KeyR'){
+          if(this.channel_settings['Microtubule'].show)
+            this.channel_settings['Microtubule'].show = false;
+          else
+            this.channel_settings['Microtubule'].show = true;
+          this.displayMap(this.current_image_data.channels, this.channel_settings);
+        }
+        // Nuclei
+        else if(event.code === 'KeyB'){
+          if(this.channel_settings['Nuclei'].show)
+            this.channel_settings['Nuclei'].show = false;
+          else
+            this.channel_settings['Nuclei'].show = true;
+          this.displayMap(this.current_image_data.channels, this.channel_settings);
+        }
+        // Protein
+        else if(event.code === 'KeyG'){
+          if(this.channel_settings['Protein'].show)
+            this.channel_settings['Protein'].show = false;
+          else
+            this.channel_settings['Protein'].show = true;
+          this.displayMap(this.current_image_data.channels, this.channel_settings);
+        }
+        else if(event.code === 'KeyH'){
+          if(this.hide_controls){
+            this.hide_controls = false
+          } 
+          else{
+            this.hide_controls = true
+          }
+        }
+        else if(event.code ==='Backspace' || event.code ==='Delete'){
+          if(this.current_task_name==='segmentation'){
+            this.deleteAnnotation()
+          }
+        }
+        else if(event.code ==='KeyZ' && (event.metaKey || event.ctrlKey)){
+          if(this.current_task_name==='segmentation'){
+            this.undoAnnotation()
+          }
+        }
+        else if(event.code ==='KeyM'){
+          if(this.current_task_name==='segmentation'){
+            if(this.show_segmentation) this.show_segmentation = false
+            else this.show_segmentation = true
+            this.vector_source.changed()
+          }
+        }
+        this.$forceUpdate()
+      }
+    })
+    // make sure the key binding works
+    document.addEventListener('mouseenter', e => {
+      window.focus();
+    });
+    document.addEventListener('click', e => {
+      window.focus();
+    });
+  },
+  computed: {
+    unsupported_labels: function(){
+      const locs = {}
+      if(this.current_image_data.location_labels){
+        for(let k in this.current_image_data.location_labels){
+          if(!this.LIMS_VALUES.includes(k)){
+            locs[k] = this.current_image_data.location_labels[k]
+          }
+        }
+      }
+      return locs      
+    },
+    annotation_variation: function(){
+      const annotation_categories = Object.keys(this.current_image_data.labels)
+      if (annotation_categories.length !== 2){
+        return "Error: should be two categories only"
+      }else{
+        if (this.current_image_data.labels[annotation_categories[0]].labels.exclusive_label&&(this.current_image_data.labels[annotation_categories[0]].labels.exclusive_label===this.current_image_data.labels[annotation_categories[1]].labels.exclusive_label)){
+          return "Identical"
+        }else if (JSON.stringify(this.current_image_data.labels[annotation_categories[0]])===JSON.stringify(this.current_image_data.labels[annotation_categories[1]])){
+          return "Identical"
+        }else{return "Different"}
+        return "Error: God knows" 
+      }
+    },
+    identify_label: function(){
+      this.current_image_data.discard = this.discard_well
+      this.current_image_data.whole_scv_spatial = this.whole_scv_spatial
+      this.current_image_data.whole_scv_intensity = this.whole_scv_intensity
+      // find this bug and just patch to fix, without knowing why yet
+      if (!(this.current_image_data && this.current_image_data.labels))return
+      const all_labels = this.current_image_data.labels
+      const well_label_changed = this.current_image_data.labels_changed
+      //api.alert("Tell me if you are here")
+      this.previous_well_image_available = false
+      this.next_well_image_available = false
+      const image_index = this.cached_image_data.indexOf(this.current_image_data)
+      let image_info, well_name
+      if(this.cached_image_data[image_index + 1]){
+        image_info = this.cached_image_data[image_index + 1].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if (well_name===this.current_well_data){
+          this.next_well_image_available = true
+        }
+      }
+      // from here, move the same_well_images_indexes to here
+      this.same_well_images_indexes = [image_index]
+      for (let i=1; i<this.cached_image_data.length; i++){
+        if(!this.cached_image_data[image_index + i])break;
+        image_info = this.cached_image_data[image_index + i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if(well_name===this.current_well_data){
+          this.same_well_images_indexes.push(image_index + i)
+        }
+      }
+      for (let i=1; i<image_index+1; i++){
+        image_info = this.cached_image_data[image_index - i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if(well_name === this.current_well_data){
+          this.same_well_images_indexes.push(image_index - i)
+        }
+      }
+      this.same_well_images_indexes.sort()
+      // till here
+
+      if(this.same_well_images_indexes.length <=1 ){
+        if(this.cached_image_data[image_index + 1]){
+          image_info = this.cached_image_data[image_index + 1].cell_id.split('_')
+          well_name = image_info.slice(0, 2).join('_')
+          if(well_name===this.current_well_data){
+            this.cached_image_data[image_index + 1].labels = all_labels
+            this.cached_image_data[image_index + 1].labels_changed = well_label_changed
+            this.cached_image_data[image_index + 1].discard = this.discard_well
+            this.cached_image_data[image_index + 1].whole_scv_spatial = this.whole_scv_spatial
+            this.cached_image_data[image_index + 1].whole_scv_intensity = this.whole_scv_intensity
+          }
+        }
+        return
+      }
+
+      let set_image_index
+      //api.alert(JSON.stringify(this.same_well_images_indexes))
+      if (this.same_well_images_indexes.includes(image_index - 1))this.previous_well_image_available = true
+      //if (this.same_well_images_indexes[this.same_well_images_indexes.length -1] > image_index)this.next_well_image_available = true
+      if (this.same_well_images_indexes.includes(image_index + 1))this.next_well_image_available = true
+      for (let i in this.same_well_images_indexes){
+        set_image_index = this.same_well_images_indexes[i]
+        this.cached_image_data[set_image_index].labels = all_labels
+        this.cached_image_data[set_image_index].labels_changed = well_label_changed
+        this.cached_image_data[set_image_index].discard = this.discard_well
+        this.cached_image_data[set_image_index].whole_scv_spatial = this.whole_scv_spatial
+        this.cached_image_data[set_image_index].whole_scv_intensity = this.whole_scv_intensity
+      }
+      return
+    }
+  },
+  methods: {
+    info(){
+      api.alert(`====== Hot keys ======
+      ======Navigation=====
+      ➕: Increase brightness
+      ➖: Decrease brightness
+      ➡️: Next image
+      ⬅️: Back
+      ======Annotation=====
+      T: True
+      F: False
+      D: Discard (toggle)
+      ======Mask=====
+      S: Save mask
+      Delete: delete selected mask
+      Ctrl+Z: Undo
+      R: Redraw mask
+      B: Extend image region
+      M: Show/hide segmentation mask
+      ======Channels=====
+      A: Alpha mask channel (toggle)
+      R: Microtubule channel (toggle)
+      G: Protein channel (toggle)
+      B: Nuclei channel (toggle)
+      Y: ER channel (toggle)
+      ======Others=====
+      H: Hide all controls (toggle)
+      Esc: Quit annotation
+      `)
+    },
+    async login(){
+      //load config data
+      this.config_data = await this.fetchConfig(this.config_url)
+      const formData = new FormData();
+      formData.append('username', this.user.username);
+      formData.append('password', this.user.password);
+      try{
+          const response = await fetch(this.selected_server_url + "/login", {
+          method: 'POST',
+          mode: 'cors',
+          body: formData
+        })
+        if(response.status === 200){
+          const res = await response.json()
+          if(res.success){
+            if(!res.access_token){
+              api.alert('JWT access token required, please make sure you are using the latest backend.');
+              return
+            }
+            this.user.role = res.role
+            this.user.access_token = res.access_token
+            this.current_panel = 'task_selection';
+            await this.getTaskList()
+          }else{
+            api.alert('Failed to login, error: ' + res.error);
+          }
+        }else{
+          api.alert('Response Status' + response.status)
+        }
+      }
+      catch(e){
+        api.alert("Cannot login to the server, error: " + e)
+      }
+    },
+    async getStatistics(){
+      this.current_panel = 'statistics'
+      this.show_reports_statistics = 'Statistics'
+      const response2 = await fetch(this.selected_server_url + "/statistics", {
+        method: 'GET',
+        headers: {'Authorization': `Bearer ${this.user.access_token}`},
+      })
+      const res2 = await response2.json()
+      this.statistics = res2.statistics
+      console.log( this.statistics )
+      this.collectChartData = []
+      for (const [key, group] of Object.entries(this.statistics)){
+        for (const [task_name, value] of Object.entries(group)){
+          this.collectChartData.splice(0, 0, [key+task_name, value])
+        }
+      }
+    },
+    async releaseHeld(){
+      // release to do list
+      const response = await fetch(this.selected_server_url + "/release", {
+          method: 'PATCH',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+        });
+      const res= await response.json();
+      if(res.success){
+        //
+      }
+      else{
+        alert('Failed to release unfinished todo tasks, error: ' + res.error);
+        throw new Error('Failed to release unfinished todo tasks.')
+      };
+    },
+    async drawChart() {
+      const idName = this.showStatKeys.idName;
+      const theData = this.showStatKeys.theData;
+      console.log(JSON.stringify(theData))
+      const modifiedData = Object.assign({}, theData)
+      let xyLabels = ['Task', 'Counts']
+      if(idName.includes('Average time elasped')){
+        xyLabels = ['Task', 's/well']
+        const keyGroup = Object.keys(theData)
+        const valueGroup = Object.values(theData)
+        for (let i=0; i<valueGroup.length; i++){modifiedData[keyGroup[i]] = parseFloat(valueGroup[i])}
+      };
+      let passData = Object.entries(modifiedData)
+      passData.splice(0, 0, xyLabels)
+      var data = google.visualization.arrayToDataTable(passData);
+
+      var options = {'title':'', 'width':480, 'height':400};
+
+      var chart = new google.visualization.BarChart(document.getElementById(idName));
+      chart.draw(data, options);
+    },
+    async barChartShow(chartkeys){
+      this.showStatKeys.idName = chartkeys[0];
+      this.showStatKeys.theData = chartkeys[1];
+      google.charts.load('current', {'packages':['corechart']});
+      await google.charts.setOnLoadCallback(this.drawChart);
+    },
+    async getTaskList(){
+      const response2 = await fetch(this.selected_server_url + "/tasks", {
+        method: 'GET',
+        headers: {'Authorization': `Bearer ${this.user.access_token}`},
+      })
+      const res2 = await response2.json()
+      this.tasks = res2.tasks
+    },
+    async fetchURLData (sub_url){
+      const response = await fetch(this.selected_server_url + sub_url, {
+        method: 'GET',
+        headers: {'Authorization': `Bearer ${this.user.access_token}`},
+      })
+      if(response.status === 200){
+        const res = await response.json()
+        if (res.success){
+          return res
+        }else{
+          api.showMessage('Internal server error: ' + res.error)
+          throw 'Internal server error: ' + res.error
+        }
+      }else{
+        api.showMessage('Response Status:' + response.status)
+        throw 'Response Status:' + response.status
+      }
+    },
+    async chooseTask (task_name){
+      this.current_task_name = task_name;
+      this.cached_image_data = [];
+      if(this.current_task_name==='segmentation' && !this.isMobile){
+        this.freehand_mode = true
+      }
+      else{
+        this.freehand_mode = false
+      }
+      this.loading = true;
+      this.channel_settings = {};
+      await this.getNewImageBatch(this.current_task_name, true);
+    },
+    async fetchConfig(config_url){
+      const response = await fetch(config_url)
+      if (response.ok){
+        const res = await response.json()
+        return res
+      }else{
+        api.showMessage('Loading error: cannot load config file')
+        throw 'Loading error: cannot load config file'
+      }
+    },
+    async fetchCellImage(cell_id){
+      const imageData = JSON.parse(JSON.stringify(imageDataTemplate));
+      imageData.cell_id = cell_id;
+      //api.alert(JSON.stringify(this.current_task_name))
+      if(this.current_task_name==='covid-annotation'){
+        imageData.cell_id = cell_id + '/covid';
+      }
+      //api.alert(JSON.stringify(cell_id))
+      let image_url = "/images/" + this.current_task_name + "/" + imageData.cell_id;
+      imageData.extend = this.current_extend_value;
+      image_url += "?extend="+imageData.extend+"&maskout=1";
+      const response = await this.fetchURLData(image_url)
+      imageData.bbox = response.bbox;
+      imageData.mask_geojson = response.mask;
+      //ER, Microtubule, Nuclei, Protein,
+      // remove mask channels if task_name==covid-annotation
+      imageData.channels = response.images;
+      if(!response.available_labels){
+        throw new Error("no available labels.")
+      }
+      //api.alert(JSON.stringify(response.available_labels))
+      imageData.exclusive_labels = response.available_labels.exclusive_labels
+      if(response.available_labels.location_labels){
+        //api.alert(JSON.stringify(response.available_labels.location_labels))
+        const labels = Object.keys(response.available_labels.location_labels);
+        if(labels.length==1){
+          imageData.label_display_mode = 'single'
+          imageData.single_label = labels[0];
+          imageData.location_labels = response.available_labels.location_labels;
+        }
+        else
+        { 
+          imageData.label_display_mode = 'multiple'
+          imageData.location_labels = response.available_labels.location_labels;
+        }
+        
+        imageData.saved_location_label = Object.assign({}, imageData.location_labels)
+      }
+      else{
+        imageData.label_display_mode = 'mask'
+      }
+      // record the current cell indice list
+      this.updateSavedCellIdx(imageData)
+
+
+      // Here is for covid-annotation only
+      if(this.current_task_name==='covid-annotation'){
+        if (Object.keys(imageData.channels).includes('Mask')){
+          delete imageData.channels['Mask']
+        }
+        // remove mask_geojson
+        imageData.mask_geojson.features = null;
+        // set labels
+        let index, annotation_category, record_label, k, v
+        imageData.labels = {}
+        for (index in this.config_data.annotation_categories){
+          annotation_category = this.config_data.annotation_categories[index]
+          imageData.labels[annotation_category] = {}
+          imageData.labels[annotation_category].labels = {}
+          imageData.labels[annotation_category].labels.location_labels = {}
+          for (k in this.config_data.labels.location_labels){
+            record_label =  this.config_data.labels.location_labels[k]
+            imageData.labels[annotation_category].labels.location_labels[record_label] = false
+          }
+          imageData.labels[annotation_category].labels.exclusive_label = false
+          imageData.labels[annotation_category].labels.single_cell_variation = false
+        }
+        // should rename here for the saved_location_label @ hao
+        imageData.saved_location_label = Object.assign({}, imageData.labels)
+      }
+
+      return imageData
+    },
+    updateSavedCellIdx(imageData){
+      if(this.current_task_name==='covid-annotation')return;
+      imageData.saved_cell_idx_list = []
+      
+      const features = imageData.mask_geojson.features;
+      imageData.max_cell_id = -1
+      for (let i = 0; i < features.length; i++){
+        if(features[i].properties && typeof features[i].properties.cell_idx === 'number'){
+          if(imageData.max_cell_id< features[i].properties.cell_idx){
+            imageData.max_cell_id = features[i].properties.cell_idx
+          }
+        }
+      }
+
+      for (let i = 0; i < features.length; i++){
+        features[i].properties = features[i].properties || {type: 'cell'}
+        // make sure one cell has one id
+        if(typeof features[i].properties.cell_idx !== 'number'){
+          imageData.max_cell_id++;
+          features[i].properties.cell_idx = imageData.max_cell_id;
+        }
+        imageData.saved_cell_idx_list.push(features[i].properties.cell_idx)
+      }
+    },
+    getMaskDiff(imageData){
+      const cell_idx_max = Math.max(...imageData.saved_cell_idx_list);
+      const features = this.current_image_data.mask_geojson.features;
+      let new_cell_idx = 0;
+      for (let k = 0; k < features.length; k++){
+        if(features[k].properties && typeof features[k].properties.cell_idx === 'number'&& features[k].properties.cell_idx > new_cell_idx){
+          new_cell_idx = features[k].properties.cell_idx
+        }
+      };
+      const new_cell_idx_list = [];
+      for (let i = 0; i < features.length; i++){
+        features[i].properties = features[i].properties || {}
+        if(!features[i].properties.label){
+          new_cell_idx += 1
+          features[i].properties.cell_idx = new_cell_idx;   
+          features[i].properties.label = 'cell'
+        };
+        new_cell_idx_list.push(features[i].properties.cell_idx)            
+      };
+      const removed = [];
+      const added = [];
+      for (let i=0; i < imageData.saved_cell_idx_list.length; i++){
+        if(!(new_cell_idx_list.includes(imageData.saved_cell_idx_list[i]))){
+          removed.push(imageData.saved_cell_idx_list[i])
+        }
+      };
+      for (let j = 0; j < new_cell_idx_list.length; j++){
+        if (!(imageData.saved_cell_idx_list.includes(new_cell_idx_list[j]))){
+          added.push(new_cell_idx_list[j])
+        }
+      };
+      return {added, removed}
+    },
+    async getNewImageBatch(task_name, init){
+      if(!this.isMobile) api.showStatus('Loading a new batch...')
+      if(this.loading_cache){
+        if(task_name === this.loading_cache){
+          return
+        }
+        else{
+          // switch tasks
+          this.cached_image_data = []
+        }
+      }
+      try{
+        this.loading_cache = task_name;
+        let url = "/tasks/" + task_name + "?num=" + this.cell_per_batch        
+        if(init){
+          url = url + '&init=1'
+          // assume each init means there are no data cached
+          this.cached_well_data = []
+          this.cached_image_data = []
+        }
+        const response = await this.fetchURLData(url);
+        const tasks = response.tasks;
+        if(tasks.length<=0){
+          api.alert('No more images to load in this task! If the progress bar shows as incomplete status, ask an admin to release todo tasks held by other annotators (press ReleaseHeld button in Statistics&&Reports panel)!')
+          return
+        }
+        // here is for covid-annotation
+        const filtered_wells = []
+        if(task_name==='covid-annotation'){
+          const wells = response.wells
+          for (let j=0; j<wells.length; j++){
+            if(task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              console.error("Come on, I cannot be here")
+              api.showProgress(0)
+              return
+            }
+            // ignore the well if the well is already cached
+            if (this.cached_well_data.includes(wells[j])){
+              filtered_wells.push(wells[j]); 
+              continue;
+            }else{
+              this.cached_well_data.push(wells[j])
+            }
+          }
+          for(let i=0;i< tasks.length; i++){
+            if(task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            // this part is to remove wells that already cached
+            const cell_info = cell_id.split('_')
+            const belonging_well = cell_info.slice(0, 2).join('_')
+            if (filtered_wells.includes(belonging_well)){
+              continue;
+            }else{
+              const imageData = await this.fetchCellImage(cell_id)
+              this.cached_image_data.push(imageData)
+              if(!this.current_image_data && this.current_task_name){
+                this.current_image_data = imageData
+                this.well_timer.start_time = new Date().getTime()
+                this.showImage(imageData)
+                this.$forceUpdate();
+              }
+            }
+          }
+        }else{
+          for(let i=0;i< tasks.length; i++){
+            if(task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            const imageData = await this.fetchCellImage(cell_id)
+            this.cached_image_data.push(imageData)
+            if(!this.current_image_data && this.current_task_name){
+              this.current_image_data = imageData
+              if(this.current_task_name==='covid-annotation')this.well_timer.start_time = new Date().getTime()
+              this.showImage(imageData)
+              this.$forceUpdate();
+            }
+          }
+        }
+
+        // remove older images
+        // for covid-annotation, this.cell_per_batch is actually about well
+        if (task_name==='covid-annotation'){
+          if(this.cached_well_data.length > this.cell_per_batch*3){
+            this.cached_well_data = this.cached_well_data.slice(this.cell_per_batch)
+            const beggin_well = this.cached_well_data[0]
+            let slice_index = 0
+            let image_info, well_name
+            for (let i=0; i<this.cached_image_data.length; i++){
+              image_info = this.cached_image_data[i].cell_id.split('_')
+              well_name = image_info.slice(0, 2).join('_')
+              if (well_name===beggin_well){
+                slice_index = i
+                break
+              }
+            }
+            this.cached_image_data = this.cached_image_data.slice(slice_index)
+            console.log('Removing well images from the cache.',  "now there are", this.cached_well_data.length, "wells,", "with", this.cached_image_data.length, "images catched")
+          }
+        }else{
+          if(this.cached_image_data.length> this.cell_per_batch*3){
+            this.cached_image_data = this.cached_image_data.slice(this.cell_per_batch)
+            console.log('Removing images from the cache.',  this.cached_image_data.length)
+          }
+        }
+        api.showProgress(100)
+        if(!this.isMobile) api.showStatus(`A new batch with ${tasks.length} images loaded`)
+        this.loadMoreIfNeeded();
+      }
+      catch(e){
+        console.error(e)
+      }
+      finally{
+        this.loading_cache = false;
+      }
+    },
+    async previousImage(){
+      await this.checkNewMask()
+      if(this.current_image_data.labels_changed&&(this.current_task_name!=='covid-annotation')){
+        await this.uploadAnnotation();
+      }
+      this.current_image_index = this.cached_image_data.indexOf(this.current_image_data)
+      if(this.current_image_index<=0){
+        this.current_image_index = 0;
+      }
+      else{
+        this.current_image_index--;
+      }
+      await this.showImage(this.cached_image_data[this.current_image_index]);
+    },
+    loadMoreIfNeeded(){
+      this.current_image_index = this.cached_image_data.indexOf(this.current_image_data)
+      // when we reach 70% of the the cached images
+      if(this.current_image_index>this.cached_image_data.length*0.7){
+        this.getNewImageBatch(this.current_task_name)
+      }
+    },
+    async saveAnnotation(){
+      if(this.current_task_name!=='covid-annotation'){
+        this.current_image_data.exclusive_label = false;
+        this.current_image_data.labels_changed = true;
+        await this.nextImage();
+      }else{
+        this.current_image_data.labels_changed = true;
+        await this.uploadAnnotation();
+        this.$forceUpdate()
+      }
+      
+    },
+    async nextImage(){
+      this.loadMoreIfNeeded();
+      await this.checkNewMask()
+      if(this.current_image_data.labels_changed&&(this.current_task_name!=='covid-annotation')){
+        await this.uploadAnnotation();
+      }
+      this.current_image_index = this.cached_image_data.indexOf(this.current_image_data)
+      this.current_image_index++;
+      if(this.cached_image_data[this.current_image_index])
+      await this.showImage(this.cached_image_data[this.current_image_index]);
+    },
+    async previousWell(){
+      this.stay_at_current_well = false;
+      await this.checkNewMask()
+      if(this.current_image_data.labels_changed){
+        await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
+      }
+      this.current_well_index = this.cached_well_data.indexOf(this.current_well_data)
+      if(this.current_well_index<=0){
+        this.current_well_index = 0;
+      }else{
+        this.current_well_index--;
+        const the_well = this.cached_well_data[this.current_well_index]
+        let image_index = 0
+        let image_info, well_name
+        for (let i=0; i<this.cached_image_data.length; i++){
+          image_info = this.cached_image_data[i].cell_id.split('_')
+          well_name = image_info.slice(0, 2).join('_')
+          if (well_name===the_well){
+            image_index = i
+            break
+          }
+        }
+        this.current_image_index = image_index
+      }
+      this.well_timer.start_time = new Date().getTime();
+      this.discard_well = this.cached_image_data[this.current_image_index].discard
+      this.whole_scv_spatial = this.cached_image_data[this.current_image_index].whole_scv_spatial
+      this.whole_scv_intensity = this.cached_image_data[this.current_image_index].whole_scv_intensity
+      this.well_comment = []
+      await this.showImage(this.cached_image_data[this.current_image_index]);
+    },
+    getWellImage(the_well, iteration){
+      this.load_image_index = 0
+      let well_name, image_info
+      for (let i=0; i<this.cached_image_data.length; i++){
+        image_info = this.cached_image_data[i].cell_id.split('_')
+        well_name = image_info.slice(0, 2).join('_')
+        if (well_name === the_well){
+          console.log('find the well: ' + well_name)
+          this.load_image_index = i
+          break
+        }
+      }
+    },
+    // for segmentation virus use
+    async SelectVirusWell(){
+      const the_well = await api.prompt("Please type the fov you want to go, the format should be like '1_A2'")
+      if(!the_well){
+        console.log("no well info typed. please try again")
+        return
+      }
+      let url = "/tasks/" + 'covid-annotation' + "?num=1" + "&well=" + the_well
+      const response = await this.fetchURLData(url);
+      const tasks = response.tasks;
+      if(tasks.length<=0){
+        api.showMessage('No more images in this task.')
+        return
+      }
+      const insert_index = this.current_image_index  + 1
+      this.loading_cache = this.current_task_name
+      for(let i=0;i< tasks.length; i++){
+        if(this.current_task_name !== this.loading_cache){
+          console.error('Switching tasks, quit caching')
+          break
+        }
+        if(!this.current_task_name){
+          api.showProgress(0)
+          return
+        }
+        const cell_id = tasks[i];
+        api.showProgress((i+1)/tasks.length)
+        const imageData = await this.fetchCellImage(cell_id)
+        this.cached_image_data.splice(insert_index + i, 0, imageData)
+        if(!i && this.current_task_name){
+          this.current_image_data = this.cached_image_data[insert_index]
+          this.well_timer.start_time = new Date().getTime()
+          this.current_well_index++
+          this.showImage(this.cached_image_data[insert_index])
+          this.$forceUpdate();
+        }
+      }
+    },
+    async SpecifyDownloadFov(){
+      this.download_fov = null;
+      if (this.current_task_name === 'covid-annotation'){
+        this.download_fov = this.current_image_data.cell_id.split('/')[0]
+      }else{
+        this.download_fov = await api.prompt("Please specify the fov image you want to download, the format should be like '2_G7_1'")
+      }
+      if(!this.download_fov){
+        console.log("no well info typed. please try again")
+        return
+      }else{
+        window.location.href = this.selected_server_url + '/downloads/' + 'fov-' + this.download_fov + '.zip'
+      }
+    },
+    async goToWell(){
+      const the_well = await api.prompt("Please type the plate and well you want to go, the format should be like '1672_A2'")
+      if(!the_well){
+        console.log("no well info typed. please try again")
+        return}
+      this.stay_at_current_well = false;
+      if(this.current_image_data.labels_changed){
+        await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
+      }
+      if (this.cached_well_data.indexOf(the_well) !== -1){
+        this.navigate_to_cached_well = true
+        this.navigating_to_well = this.cached_well_data.indexOf(the_well)
+        await this.nextWell()
+      }else{
+        //const the_well = "1672_A2"
+        const insert_index = Math.max(...this.same_well_images_indexes) + 1
+        try{
+          this.loading_cache = this.current_task_name;
+          let url = "/tasks/" + this.current_task_name + "?num=1" + "&well=" + the_well
+          const response = await this.fetchURLData(url);
+          const tasks = response.tasks;
+          if(tasks.length<=0){
+            api.showMessage('No more images in this task.')
+            return
+          }
+          // here is for covid-annotation
+          const wells = response.wells
+          if(wells.length!==1){console.log("This is the wells found: " + JSON.stringify(wells)); return}
+          console.log("This is the wells found: " + JSON.stringify(wells))
+          console.log("This is the images found: " + JSON.stringify(tasks))
+          for (let j=0; j<wells.length; j++){
+            if(this.current_task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            this.cached_well_data.push(this.cached_well_data.splice(this.current_well_index + 1, 0, wells[j]))
+          }
+          for(let i=0;i< tasks.length; i++){
+            if(this.current_task_name !== this.loading_cache){
+              console.error('Switching tasks, quit caching')
+              break
+            }
+            if(!this.current_task_name){
+              api.showProgress(0)
+              return
+            }
+            const cell_id = tasks[i];
+            api.showProgress((i+1)/tasks.length)
+            const imageData = await this.fetchCellImage(cell_id)
+            this.cached_image_data.splice(insert_index + i, 0, imageData)
+            if(!i && this.current_task_name){
+              this.current_image_data = this.cached_image_data[insert_index]
+              this.well_timer.start_time = new Date().getTime()
+              this.current_well_index++
+              this.showImage(this.cached_image_data[insert_index])
+              this.$forceUpdate();
+            }
+          }
+        }catch(e){
+          console.error(e)
+        }
+        finally{
+          this.loading_cache = false;
+        }
+      }
+    },
+    async nextWell(){
+      this.stay_at_current_well = false;
+      //this.loadMoreIfNeeded();
+      await this.checkNewMask()
+      // adjust this part later
+      if(this.current_image_data.labels_changed){
+        await this.uploadAnnotation();
+        if (this.stay_at_current_well)return;
+      }
+      //this.current_well_index
+      if (this.current_well_index * 2 > this.cached_well_data.length){
+        api.showMessage("loading new wells...")
+        await this.getNewImageBatch(this.current_task_name)
+      }
+      console.log("current_well_list length: " + this.current_well_data.length)
+      if (!this.navigate_to_cached_well){
+        this.current_well_index = this.cached_well_data.indexOf(this.current_well_data)
+        console.log("current_well_index: ", this.current_well_index)
+        this.current_well_index++;
+      }else{
+        this.current_well_index = this.navigating_to_well
+        this.navigate_to_cached_well = false
+        this.navigating_to_well = null
+      }
+      console.log("go to well_index: ", this.current_well_index)
+      const the_well = this.cached_well_data[this.current_well_index]
+      if (!the_well){api.alert("limited wells available, finish your remaining tasks first and then click next well to load more! If this message pops up again, relaunch the annotation tool to double check progress status?! If not all done, go to Statistics&&Reports panel and press ReleaseHeld button to release held tasks!!"); return}
+      console.log("go to well name: ", the_well)
+      let iteration = 0
+      await this.getWellImage(the_well, iteration)
+      let well_name, image_info
+      image_info = this.cached_image_data[this.load_image_index].cell_id.split('_')
+      well_name = image_info.slice(0, 2).join('_')
+      for (let j=0;j<3;j++){
+        this.loading = true
+        if(well_name !==the_well){
+          iteration++;
+          await this.getWellImage(the_well, iteration)
+        }else{
+          this.loading=false;
+          console.log("current_cell_id: ", this.cached_image_data[this.load_image_index].cell_id)
+          break
+        }
+      }
+      this.loading = false
+      image_info = this.cached_image_data[this.load_image_index].cell_id.split('_')
+      well_name = image_info.slice(0, 2).join('_')
+      if(well_name !==the_well){api.alert("loading images..., please click again after 2 second")
+      return
+      }
+      const image_index = this.load_image_index
+      this.current_image_index = image_index
+      console.log("image name: ", this.cached_image_data[this.current_image_index].cell_id)
+      if(this.cached_image_data[this.current_image_index]){
+        this.well_timer.start_time = new Date().getTime();
+        this.discard_well = this.cached_image_data[this.current_image_index].discard
+        this.whole_scv_spatial = this.cached_image_data[this.current_image_index].whole_scv_spatial
+        this.whole_scv_intensity = this.cached_image_data[this.current_image_index].whole_scv_intensity
+        this.well_comment = []
+        await this.showImage(this.cached_image_data[this.current_image_index]);
+      }
+    },
+    async checkNewMask(){
+      if(!this.current_image_data.mask_adjusted){
+        return 
+      }
+      if(this.current_task_name === 'segmentation'){
+          await this.uploadAnnotation();
+      }
+      else{
+        if(this.vector_source && this.vector_source.getFeatures().length>0){
+          const anwser = await api.confirm("Would you like to save the mask annotation?")
+          if(anwser){
+            if(!await this.saveMaskAnnotation()){
+              return
+            }
+          }
+          else{
+            this.stopMaskAnnotation()
+            this.current_image_data.mask_adjusted = false;
+          }
+        }
+        else{
+          this.stopMaskAnnotation()
+        }
+      }
+
+    },
+    async showImage(imageData){
+      if(!imageData){
+        api.showStatus('No more image to show.')
+        console.error('no image data to show.')
+        return
+      }
+      if(!this.isMobile) api.showStatus(imageData.cell_id)
+      let image_info, well_name
+      if(this.current_task_name==='covid-annotation'){
+        const well_info = imageData.cell_id.split('_')
+        this.current_well_data = well_info.slice(0, 2).join('_')
+      }      
+      this.current_image_data = imageData;
+      imageData.start_time = new Date().getTime();
+      // annotation viewer
+      this.current_panel = 'imageviewer';
+      if(!this.draw_mask_mode){
+        this.stopMaskAnnotation()
+      }
+      if(this.draw_mask_mode && imageData.extend != this.current_extend_value){
+        this.reloadImage()
+      }
+      else{
+        this.$nextTick(async ()=>{
+          this.loading = true;
+          window.onresize();
+          try{
+              await this.displayMap(imageData.channels, this.channel_settings);
+              this.showMaskAnnotation(imageData.mask_geojson);
+          }
+          catch(e){
+            console.error(e)
+          }
+          finally{
+            this.loading = false;
+          }
+        })
+      };
+    },
+    // extend Image
+    async reloadImage(){
+      this.loading = true;
+      this.current_image_index = this.cached_image_data.indexOf(this.current_image_data);
+      const imageDataOld = this.current_image_data;
+      const imageData = await this.fetchCellImage(imageDataOld.cell_id)
+      imageDataOld.mask_geojson = imageData.mask_geojson;
+      imageDataOld.channels = imageData.channels;
+      imageDataOld.extend = imageData.extend;
+      imageDataOld.mask_adjusted = imageData.mask_adjusted;
+      if(this.current_image_data.cell_id === imageDataOld.cell_id){
+        await this.showImage(imageDataOld)
+      }
+      this.loading = false;
+    },
+    async uploadAnnotation(){
+      // skip upload annotation if image is annotated and no new change
+      if ((!this.current_image_data.mask_adjusted)&&(!this.current_image_data.labels_changed)){
+        return
+      }
+      // Default options are marked with *
+      const sendData = {}
+      
+      if(this.current_image_data.start_time&&(this.current_task_name!=='covid-annotation')){
+        this.current_image_data.time_elapsed = new Date().getTime() - this.current_image_data.start_time;
+        sendData.start_time = this.current_image_data.start_time;
+        sendData.time_elapsed = this.current_image_data.time_elapsed;
+      }
+      if (this.current_task_name==='covid-annotation'){
+        if(this.well_timer.start_time){
+          this.well_timer.time_elapsed = new Date().getTime() - this.well_timer.start_time
+          sendData.start_time = this.well_timer.start_time
+          sendData.time_elapsed = this.well_timer.time_elapsed
+          if (this.well_comment.length){sendData.comment = this.well_comment}
+        }
+      // consider about the discard button later
+        if (this.current_image_data.labels_changed&&this.discard_well){
+          sendData.labels = "Discard"
+        }  
+        if (this.current_image_data.labels_changed&&(!this.discard_well)){
+          sendData.annotation_variation = this.annotation_variation
+          sendData.whole_scv_spatial = this.whole_scv_spatial
+          sendData.whole_scv_intensity = this.whole_scv_intensity
+          sendData.labels = {}
+          let complete_indicator = {}
+          const annotation_types = Object.keys(this.current_image_data.labels)
+          for(let k of Object.keys(this.current_image_data.labels)){
+            sendData.labels[k] = {}
+            sendData.labels[k].labels = {}
+            complete_indicator[k] = false
+            if(this.current_image_data.labels[k].labels.exclusive_label){
+              complete_indicator[k] = true
+              sendData.labels[k].labels.exclusive_label = this.current_image_data.labels[k].labels.exclusive_label;
+            }
+            else{
+              sendData.labels[k].labels.location_labels = this.current_image_data.labels[k].labels.location_labels;
+              for (let loc in sendData.labels[k].labels.location_labels){
+                if (sendData.labels[k].labels.location_labels[loc]){
+                  complete_indicator[k] = true
+                  break
+                }
+              }
+              sendData.labels[k].labels.single_cell_variation = this.current_image_data.labels[k].labels.single_cell_variation
+            }
+          }
+          console.log(JSON.stringify(complete_indicator))
+          if (!(complete_indicator[annotation_types[0]]&&complete_indicator[annotation_types[1]])){
+            const answer = await api.confirm("Incomplete annotation (either Negative/Unspecific or protein labels should be selected for each annotation group). Please press 'OK' if move on without saving, or 'Cancel' to complete the annotation'?")
+            if (!answer){
+              this.stay_at_current_well = true
+              return
+            }else{
+              console.log('you press OK!!!')
+              this.current_image_data.labels_changed = false
+              return
+            }
+          }
+        }
+      }else{
+        if (this.current_image_data.labels_changed){
+          if(this.current_image_data.exclusive_label){
+            sendData.labels = this.current_image_data.exclusive_label;
+          }
+          else{
+            sendData.labels = this.current_image_data.location_labels;
+          }
+          if(typeof sendData.labels === 'object'){
+            let noLabel = true;
+            for (let loc in sendData.labels){
+              if(sendData.labels[loc] === null){
+                sendData.labels[loc] = false
+              }
+              else{
+                noLabel = false;
+              }
+            }
+            if (noLabel && this.current_image_data.label_display_mode==='multiple'){
+              const anwser = await api.confirm("No label label selected, is that correct?")
+              if (!anwser){
+                return
+              }
+            };
+          }
+        }
+        if (this.current_image_data.mask_adjusted){
+          // sendData
+          sendData.extend = this.current_image_data.extend;
+          sendData.bbox = this.current_image_data.bbox;
+          // set the masks
+          const allFeatures = this.vector_source.getFeatures();
+          const format = new ol.format.GeoJSON();
+          const routeFeatures = format.writeFeaturesObject(allFeatures, {decimals: 1});
+          routeFeatures['bbox'] = this.current_image_data.mask_geojson.bbox;
+          this.current_image_data.mask_geojson = routeFeatures;
+          sendData.mask = this.current_image_data.mask_geojson;
+          sendData.mask_diff = this.getMaskDiff(this.current_image_data);
+        };
+      }
+   
+      // this is the url to send the current annotation
+      console.log(JSON.stringify(sendData))
+      let sub_url = "/annotations/" + this.current_task_name + "/"
+      if(this.current_task_name==='covid-annotation'){
+        sub_url = sub_url + this.current_image_data.cell_id.split('/')[0];
+      }else{
+        sub_url = sub_url + this.current_image_data.cell_id;
+      }
+      console.log(sub_url)
+      const url_post = this.selected_server_url + sub_url;
+      const response = await fetch(url_post, {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+          body: JSON.stringify(sendData)
+        });
+      const res= await response.json();
+      if(res.success){
+        this.current_image_data.mask_adjusted = false;
+        this.current_image_data.labels_changed = false;
+        if(this.current_task_name==='covid-annotation'){
+          this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.labels)
+        }else{
+          this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.location_labels)
+          this.updateSavedCellIdx(this.current_image_data)
+        }
+      }
+      else{
+        alert('Failed to upload the annotaiton, error: ' + res.error);
+        throw new Error('Failed to upload the annotaiton.')
+      };
+    },
+    async drawMaskModeChanged(){
+      if(this.draw_mask_mode){
+        this.loading = true;
+        try{
+          this.current_image_data.mask_adjusted=false;
+          await this.reloadImage();
+        }
+        catch(e){
+          console.error(e)
+        }
+        finally{
+          this.loading = false;
+        }
+      }
+      else{
+        this.checkNewMask()
+        this.stopMaskAnnotation()
+      }
+    },
+    async toggleExclusiveLabels(type){
+      this.current_image_data.labels_changed = true;
+      if(this.current_image_data.exclusive_label === type){
+        this.current_image_data.exclusive_label = false;
+        this.current_image_data.location_labels = Object.assign({}, this.current_image_data.saved_location_label)
+      }
+      else{
+        this.current_image_data.exclusive_label = type
+        
+      }
+      this.$forceUpdate()
+      await this.uploadAnnotation();
+    },
+    async toggleCovidDiscardLabel(){
+      this.current_image_data.labels_changed = true;
+      if (this.discard_well){
+        this.discard_well = false
+      }else{
+        this.discard_well = true;
+        //await this.uploadAnnotation();
+      }
+      this.$forceUpdate()
+    },
+    // scv_tag has two choice, scv_intensity, scv_spatial
+    async toggleCovidWholeSCV(scv_tag){
+      this.current_image_data.labels_changed = true;
+      if (scv_tag==='scv_intensity'){
+        if (this.whole_scv_intensity){
+          this.whole_scv_intensity = false
+        }else{
+          this.whole_scv_intensity = true;
+          //await this.uploadAnnotation();
+        }
+      }else{
+        if (this.whole_scv_spatial){
+          this.whole_scv_spatial = false
+        }else{
+          this.whole_scv_spatial = true;
+          //await this.uploadAnnotation();
+        }      
+      }
+      this.$forceUpdate()
+    },
+    async toggleCovidExclusiveLabels(annotation_category, type){
+      this.current_image_data.labels_changed = true;
+      if(this.current_image_data.labels[annotation_category].labels.exclusive_label === type){
+        // the order for the following two lines matters
+        //this.current_image_data.labels[annotation_category].labels.location_labels = Object.assign({}, this.current_image_data.saved_location_label[annotation_category].labels.location_labels)
+        this.current_image_data.labels[annotation_category].labels.exclusive_label = false;
+        // here saved_location_label includes all labels
+      }
+      else{
+        this.current_image_data.labels[annotation_category].labels.exclusive_label = type
+        
+      }
+      this.$forceUpdate()
+      // this one is temporarily muted
+      //await this.uploadAnnotation();
+    },
+    showMaskAnnotation(mask_geojson){
+      if(this.current_task_name==='covid-annotation')return;
+      this.vector_source.clear()
+      const features = (new GeoJSON()).readFeatures(mask_geojson)
+      this.vector_source.addFeatures(features)
+      this.current_image_data.mask_adjusted = false;
+      this.mask_history = []
+    },
+    async saveMaskAnnotation(){
+      const allFeatures = this.vector_source.getFeatures();
+      const format = new ol.format.GeoJSON();
+      const routeFeatures = format.writeFeaturesObject(allFeatures, {decimals: 1});
+      if(this.current_task_name !== 'segmentation'){
+        if (!routeFeatures.features.length){
+          api.alert('Please draw a cell mask before saving!');
+          return false
+        }
+        if(routeFeatures.features.length>1){
+          api.alert('Only one cell mask is allowed!');
+          return false
+        }
+      }
+
+      routeFeatures['bbox'] = this.current_image_data.mask_geojson.bbox;
+      this.current_image_data.mask_geojson = routeFeatures;
+      this.current_image_data.mask_adjusted = true;
+      await this.uploadAnnotation()
+      if (this.current_task_name !== 'segmentation'){
+        this.stopMaskAnnotation()
+      }
+      await this.reloadImage()
+      return true
+    },
+    async exportAnnotation() {
+      const allFeatures = this.vector_source.getFeatures();
+
+      const format = new ol.format.GeoJSON();
+      const routeFeatures = format.writeFeaturesObject(allFeatures, {decimals: 1});
+      routeFeatures['bbox'] = this.current_image_data.mask_geojson.bbox;
+      const blob = new Blob([JSON.stringify(routeFeatures)], {
+          type: "text/plain;charset=utf-8"
+      });
+      api.alert(JSON.stringify(blob))
+    },
+    // go to nextImage after select True/False.
+    async selectLabel(selected){
+      this.current_image_data.location_labels[this.current_image_data.single_label] = selected;
+      this.current_image_data.labels_changed = true;
+      await this.nextImage()
+    },
+    async displayMap(channels, channel_settings, brightness){
+      //api.alert('Show me: ' + JSON.stringify(this.current_task_name))
+      if(this.current_task_name==='covid-annotation'){
+        if (Object.keys(channel_settings).includes('Mask')){
+          delete channel_settings['Mask']
+        }
+      }
+      for(let k of Object.keys(channels)){
+        if(!channel_settings[k]){
+          channel_settings[k] = {name: k, show: true}
+        }
+      }
+      let url, extent;
+      if(channels.merged){
+        url = channels.merged
+        const imgObj = await getMeta(url)
+        extent = [0, 0, imgObj.width, imgObj.height];
+      }
+      else{
+        const image = await composeChannels(channels, channel_settings, this.alpha, brightness)
+        extent = [0, 0, image.width, image.height];
+        url = image.url;
+      }
+      this.current_displayed_image = url;
+
+      const projection = new Projection({
+          code: 'image',
+          units: 'pixels',
+          extent: extent,
+      });
+
+      const image_source = new Static({
+        attributions: '©Human Protein Atlas',
+        url: url,
+        projection: projection,
+        imageExtent: extent
+      })
+
+      if(this.image_layer && this.map){
+        try {
+          let view = this.map.getView()
+          const zoom = view && view.getZoom()
+          const center = view &&  view.getCenter()
+          view = null
+          this.map.setView( new View({
+            projection: projection,
+            center: center || getCenter(extent),
+            zoom: zoom || 1,
+            minZoom: -10
+          }))
+        }
+        catch(err){
+          console.log('Issue: ' + err)
+          this.map.setView( new View({
+            projection: projection,
+            center: getCenter(extent),
+            zoom: 1,
+            minZoom: -10
+          }))
+        }
+        this.image_layer.setSource(image_source)
+        return
+      }
+
+      this.image_layer = new ImageLayer({
+        source: image_source,
+      })
+
+      this.vector_source = new VectorSource();
+      this.mask_history = []
+      this.vector_source.on('addfeature', (event)=>{
+        if(event.feature._undoing){
+          delete event.feature._undoing
+        }
+        else{
+          this.mask_history.push({'add': event.feature})
+          if(!event.feature.get('cell_idx') && event.feature.get('cell_idx') !== 0){
+            this.current_image_data.max_cell_id++      
+            event.feature.set('cell_idx', this.current_image_data.max_cell_id)
+            event.feature.set('label', 'cell')
+          }
+        }
+        this.current_image_data.mask_adjusted = true
+      });
+      this.vector_source.on('removefeature', (event)=>{
+        if(event.feature._undoing){
+          delete event.feature._undoing
+        }
+        else{
+          this.mask_history.push({'remove': event.feature})
+        }
+        this.current_image_data.mask_adjusted = true
+      });
+      var vector_layer = new VectorLayer({
+        source: this.vector_source
+      });
+
+      vector_layer.setStyle((feature) => {
+        let color_style = new Style({
+            fill: new Fill({
+              color: 'rgba(255, 255, 255, 0)'
+            }),
+            stroke: new Stroke({
+                color: this.current_task_name ==='segmentation'? (this.show_segmentation? '#f5d80b91': '#00000000'): '#448aff53',
+                width: 2
+            }),
+            text: new Text({
+                text: this.current_task_name ==='segmentation'? String(feature.get('cell_idx')): '',
+                font: '14px Calibri,sans-serif',
+                fill: new Fill({
+                    color: '#03346f'
+                }),
+                stroke: new Stroke({
+                    color: '#d6d37ea6',
+                    width: 4
+                })
+            })
+        });
+        return color_style;      
+      })
+      const select = new Select({
+          wrapX: false
+      });
+      // clear map
+      this.$refs.map.innerHTML = ""
+      this.map = new Map({
+        interactions: ol.interaction.defaults({altShiftDragRotate:false, pinchRotate:false}),
+        controls: [],
+        layers: [
+          this.image_layer,
+          vector_layer,
+        ],
+        target: 'map',
+        view: new View({
+          projection: projection,
+          center: getCenter(extent),
+          zoom: 1,
+          minZoom: -10
+        })
+      });
+      this.map.addControl(new MousePosition({
+          coordinateFormat: createStringXY(0)
+      }));
+      this.map.addInteraction(select);
+      this.select = select
+      select.on('select', (e)=>{
+        if(e.selected && e.selected.length>0)
+            this.selected_feature = e.selected
+          else{
+              this.selected_feature = null
+          }
+      })
+      if(this.current_task_name === 'segmentation' && !this.isMobile){
+        this.startMaskAnnotation(this.vector_source, this.freehand_mode)
+      }
+      else{
+        this.freehand_mode = false;
+      }
+    },
+    freehandChanged(){
+        if (this.current_task_name !== 'segmentation') return
+        
+        this.startMaskAnnotation(this.vector_source, this.freehand_mode)
+        if(!this.freehand_mode && this.isMobile){
+            this.stopMaskAnnotation()
+        }
+    },
+    async undoAnnotation() {
+      if(this.mask_history.length>0){
+        const action = this.mask_history.pop()
+        if(action.add){
+            const allFeatures = this.vector_source.getFeatures();
+          allFeatures.forEach((feature)=>{
+            if(action.add === feature){
+              feature._undoing = true
+              this.vector_source.removeFeature(feature);
+              this.select.getFeatures().remove(feature);
+            }
+          });
+        }
+        else if(action.remove){
+          action.remove._undoing = true
+          this.vector_source.addFeature(action.remove)
+        }
+      }
+    },
+    // to remove selected annotation
+    async deleteAnnotation() {
+      if (this.vector_source) {
+        const features = this.select.getFeatures()
+        features.forEach((feature)=>{
+            this.vector_source.removeFeature(feature);
+            this.select.getFeatures().remove(feature);
+        });
+      }
+    },
+    startMaskAnnotation(source, freehand){
+      if(!source){
+        console.error("Please specify an annotation layer source")
+      }
+      if (this.drawInteraction) {
+        this.map.removeInteraction(this.drawInteraction)
+      }
+      this.drawInteraction = new Draw({
+        source: source,
+        type: 'Polygon',
+        freehand: freehand
+      });
+      this.map.addInteraction(this.drawInteraction);
+      if(this.current_task_name !== 'segmentation'){
+        if (this.current_task_name==='covid-annotation'){
+          api.alert('No Mask')
+          return;}
+        if(this.channel_settings['Mask'])
+          this.channel_settings['Mask'].show = false
+        this.displayMap(this.current_image_data.channels, this.channel_settings);
+      }
+    },
+    stopMaskAnnotation(){
+      if (this.current_task_name==='covid-annotation'){
+          api.alert('No Mask')
+          return;}
+      if(this.channel_settings['Mask'])
+      this.channel_settings['Mask'].show = true
+      this.displayMap(this.current_image_data.channels, this.channel_settings);
+      if(!this.map) return;
+      if(this.drawInteraction)
+      this.map.removeInteraction(this.drawInteraction);
+    },
+    toggleLabel(k){
+      if(this.current_image_data.location_labels[k]){
+        this.current_image_data.location_labels[k]=false
+      }
+      else{
+        this.current_image_data.location_labels[k]=true
+      }
+      this.current_image_data.exclusive_label = false;
+      this.current_image_data.labels_changed = true;
+    },
+    toggleCovidLabel(annotation_category, k){
+      if(this.current_image_data.labels[annotation_category].labels.location_labels[k]){
+        this.current_image_data.labels[annotation_category].labels.location_labels[k]=false
+      }
+      else{
+        this.current_image_data.labels[annotation_category].labels.location_labels[k]=true
+      }
+      this.current_image_data.labels[annotation_category].labels.exclusive_label = false;
+      this.current_image_data.labels_changed = true;
+    },
+    toggleCovidSCVLabel(annotation_category){
+      if(this.current_image_data.labels[annotation_category].labels.single_cell_variation){
+        this.current_image_data.labels[annotation_category].labels.single_cell_variation=false
+      }
+      else{
+        this.current_image_data.labels[annotation_category].labels.single_cell_variation=true
+      }
+      this.current_image_data.labels[annotation_category].labels.exclusive_label = false;
+      this.current_image_data.labels_changed = true;
+    },
+    screenShot(){
+      var mapCanvas = document.createElement('canvas');
+      var size = this.map.getSize();
+      mapCanvas.width = size[0];
+      mapCanvas.height = size[1];
+      var mapContext = mapCanvas.getContext('2d');
+      Array.prototype.forEach.call(document.querySelectorAll('.ol-layer canvas'), function(canvas) {
+        if (canvas.width > 0) {
+          var opacity = canvas.parentNode.style.opacity;
+          mapContext.globalAlpha = opacity === '' ? 1 : Number(opacity);
+          var transform = canvas.style.transform;
+          // Get the transform parameters from the style's transform matrix
+          var matrix = transform.match(/^matrix\(([^\(]*)\)$/)[1].split(',').map(Number);
+          // Apply the transform to the export map context
+          CanvasRenderingContext2D.prototype.setTransform.apply(mapContext, matrix);
+          mapContext.drawImage(canvas, 0, 0);
+        }
+      });
+      return mapCanvas.toDataURL('image/jpeg', 1.0)
+    },
+    updateDownloadCounts(){
+      this.download_counts = new Date().getTime()
+    },
+    async showReport(){
+      const res = await this.fetchURLData("/reports")
+      this.show_reports_statistics = 'Reports'
+      this.reports = res.reports
+    },
+    async resolveReport(report_name){
+      // this is to remove report
+      const sub_url = "/reports/" + report_name;
+      const url_post = this.selected_server_url + sub_url;
+      const response = await fetch(url_post, {
+          method: 'PATCH',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+        });
+      const res= await response.json();
+      if(res.success){
+        await this.showReport();
+      }
+      else{
+        alert('Failed to resolve the report, error: ' + res.error);
+        throw new Error('Failed to resolve the report.')
+      };
+    },
+    refineLabels(receivelabels){
+      //this.current_image_data.labels[annotation_category].labels
+      const covidlabels = JSON.parse(JSON.stringify(receivelabels))
+      const category_annotations = {}
+      let protein_annotations = []
+      if(Object.keys(covidlabels).includes("exclusive_label")&&covidlabels.exclusive_label){
+        console.log(covidlabels.exclusive_label)
+        category_annotations.exclusive_label = covidlabels.exclusive_label
+      }else if(Object.keys(covidlabels).includes("location_labels")){
+        if(Object.keys(covidlabels).includes("single_cell_variation")&&covidlabels.single_cell_variation){
+          category_annotations.single_cell_variation = covidlabels.single_cell_variation
+        }
+        for (let k in covidlabels.location_labels){
+          if(covidlabels.location_labels[k]==true){protein_annotations.push(k)}
+        }
+        console.log(JSON.stringify(protein_annotations))
+        if (protein_annotations.length){
+          category_annotations.location_labels = protein_annotations.join("|")
+        }
+      }
+      if (!Object.keys(category_annotations).length){return }
+      return category_annotations
+    },
+    async report(){
+      const comment = await api.prompt('Please type your comment on this image to follow up. This image will be shared to the cellprofiling slack.')
+      if(comment){
+        const screenshot = this.screenShot()
+        let body_content
+        if(this.current_task_name==='covid-annotation'){
+          this.current_image_data.labels_changed = true
+          this.well_comment.push(comment)
+          const infected_data = this.refineLabels(this.current_image_data.labels.Infected.labels)
+          const non_infected_data = this.refineLabels(this.current_image_data.labels.Non_infected.labels)
+          console.log('Here is data: ' + JSON.stringify(non_infected_data))
+          // add special body content for covid-annotation
+          // temporiraly hard code the Infected and Non_infected
+          body_content = JSON.stringify({
+            report: {
+              comment: comment,
+              task_id: this.current_image_data.cell_id.split('/')[0],
+              discard_well: this.discard_well,
+              annotation_variation: this.annotation_variation,
+              whole_scv_spatial: this.whole_scv_spatial,
+              whole_scv_intensity: this.whole_scv_intensity,
+              Infected: infected_data,
+              Non_infected: non_infected_data, 
+            },
+            image: this.current_displayed_image,
+            screenshot: screenshot
+          })
+        }else{
+          body_content = JSON.stringify({
+            report: {
+              comment: comment,
+              task_id: this.current_image_data.cell_id,
+              location_labels: this.current_image_data.location_labels,
+              exclusive_labels: this.current_image_data.exclusive_labels,
+            },
+            image: this.current_displayed_image,
+            screenshot: screenshot
+          })
+        }
+        // comment out return in real work
+        //return
+        const response = await fetch( this.selected_server_url + '/reports', {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+          body: body_content
+        });
+        if(response.status !== 200){
+          api.alert('Failed to send report: ' + response.status)
+        }
+      }
+      else{
+        api.showMessage('Sharing canceled.')
+      }
+    },
+    home(){
+      this.current_panel='task_selection';
+      this.current_task_name = null;
+      this.current_image_index = 0;
+      this.cached_image_data = [];
+      this.current_image_data = null
+      this.getTaskList();
+      // destroy the map
+      this.$refs.map.innerHTML = "";
+      this.map = null;
+      this.$forceUpdate();
+    },
+    channelSettingsUpdated(event){
+      // make sure ER and Microtubule are not turned on at the same time
+      this.$forceUpdate()
+      this.displayMap(this.current_image_data.channels, this.channel_settings);
+    },
+    async showStatistics(){
+      await this.getStatistics()
+      // show all the charts
+      for (let item of this.collectChartData){
+        await this.barChartShow(item)
+      }
+    }
+  }
+})
+
+class ImJoyPlugin {
+  async setup() {
+  }
+
+  async run(ctx) {
+
+  }
+}
+
+api.export(new ImJoyPlugin())
+</script>
+
+<window>
+  <div style="text-align: center;" id="app">
+    <div class="panel centered-panel" v-if="current_panel=='login'">
+      <div class="panel-header">
+        <div class="panel-title h2">Covid Image Annotator</div>
+        <span>(v{{version}})</span>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="form-label" for="server">Server</label>
+          <select class="form-select" v-model="selected_server_url">
+            <option>Choose an option</option>
+            <option v-for="(url, k) in servers" :value="url" :key="url">{{k}}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-example-1">Name</label>
+          <input class="form-input" type="text" name="username" v-model="user.username"  placeholder="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-example-1">Password</label>
+          <input class="form-input" type="password" name="password" v-model ="user.password" placeholder="password">
+        </div>
+        <button class="btn" @click="login()">Login</button>
+      </div>
+      <div class="panel-footer">
+        <!-- buttons or inputs -->
+      </div>
+    </div>
+    <div class="panel centered-panel" v-if="current_panel=='task_selection'">
+      <div class="panel-header">
+        <div class="panel-title h2">Covid Image Annotator </div> <span>(v{{version}})</span>
+        <br>
+        <p>Please choose a panel:</p>
+      </div>
+      <div class="panel-body">
+        <br>
+        <!--here only show covid annotation-->
+        <div v-for="(task, task_name) in tasks" v-if="(task_name==='covid-annotation')||(task_name==='segmentation')":key="task_name">
+          <progress class="progress" style="width: 280px" :value="task.finished" :max="task.total"></progress>
+          <br>
+          <button class="btn" style="width: 280px" @click="chooseTask(task_name)"><i class="icon icon-edit"></i>&nbsp; {{task_name}}: {{task.finished}}/{{task.total}}</button>
+          <br>
+          <br>
+        </div>
+        <button v-if="user.role === 'admin'" class="btn" style="width: 280px" @click="showStatistics()">Statistics && Reports(📊🔔)</button>
+      </div>
+      <div class="panel-footer">
+      </div>
+    </div>
+
+    <div class="panel statistics-panel" v-if="current_panel=='statistics'&&statistics">
+      <div><a :href="selected_server_url + '/downloads/' + download_counts + '_images_comments.csv'" title="download info of commented images" @click="updateDownloadCounts()" target="_blank" style="right: 440px; top: 20px; position: absolute; font: 14px arial,serif;"><b>DownloadComments</b></a></div> 
+      <div><a :href="selected_server_url + '/downloads/' + download_counts + '_annotation_results.csv'" title="download annotation results" @click="updateDownloadCounts()" target="_blank" style="right: 326px; top: 20px; position: absolute; font: 14px arial,serif;"><b>DownloadResult</b></a></div>
+      <button v-if="user.role === 'admin'" style="right: 230px; top: 20px; position: absolute; font: 11px arial,serif;" title="specify a well to download" class="btn-sm release-unfinished-btn" @click="SpecifyDownloadFov()"><b>DownloadFov</b></button>&nbsp;&nbsp; 
+      <button v-if="user.role === 'admin'" style="right: 144px; top: 20px; position: absolute; font: 11px arial,serif;" title="release held tasks by other annotators" class="btn-sm release-unfinished-btn" @click="releaseHeld()"><b>ReleaseHeld</b></button>&nbsp;&nbsp;
+      <button style="right: 94px; top: 10px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load reports" @click="showReport()"><b>Rep</b></button>&nbsp;&nbsp;
+      <button style="right: 52px; top: 12px; position: absolute; font: 11px arial,serif;" class="btn btn-action s-circle" title="load statistics" @click="showStatistics()"><b>Stats</b></button>&nbsp;&nbsp;
+      <button style="right: 10px; top: 10px; position: absolute;" class="btn btn-action s-circle" title="home" @click="home()"><i class="icon icon-cross"></i></button>&nbsp;&nbsp;
+      <p style="font: bold 32px arial,serif">{{show_reports_statistics}}</p>
+      <div class="panel-body" v-show="show_reports_statistics==='Reports'">
+        <div v-for="(s, report_event) in reports" :key="report_event">
+          <div class="card" style="width: 500px;max-width:100%;">
+            <div class="card-body">
+              <div class="card-header">
+                <div class="card-title h5">{{report_event}}
+                <span><i title="resolve report" class="icon icon-cross" @click="resolveReport(report_event)"></i></span>
+                </div>
+              </div>  
+              <div v-for="(v, item) in s" :key="item">
+                <div class="card-subtitle text-gray"><b>{{item}}</b></div>
+                <div v-if="(typeof v)!=='object'">
+                  <span class="chip">{{v}}</span>
+                </div>
+                <div v-if="Array.isArray(v)" v-for="value in v" :key="item">
+                  <span class="chip">{{value}}</span>
+                  </div>
+                <div v-if="(typeof v)==='object'&&(!Array.isArray(v))" v-for="(value, anno_item) in v" :key="item">
+                <span class="chip">{{anno_item}}: {{value}}</span>
+                </div>
+              </div>
+              <div v-if="s.summary">
+                <div class="card-subtitle text-gray"><b>Thumbnail image</b></div>
+                <a :href="s.summary.screenshot_url" target="_blank" style="font: 14px arial,serif;">(show screenshot image)</a>
+                <br>
+                <img :src="s.summary.thumbnail_url">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body" v-show="show_reports_statistics==='Statistics'">
+        <div v-for="(s, k) in statistics" :key="k">
+          <div class="card" style="width: 500px;max-width:100%;">
+            <div class="card-body">
+              <div class="card-header">
+                <div class="card-title h5">{{k}}</div>
+              </div>  
+              <div v-for="(v, task_name) in s" :key="task_name">
+                <div class="card-subtitle text-gray">{{task_name}}</div>
+                <div :id="k + task_name"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel" v-if="current_panel=='imageviewer'&&current_image_data">
+      <span v-if="current_task_name === 'segmentation'" v-show="!hide_controls" class="h3 floating-label">{{current_image_data.cell_id}}</span>
+      <div v-show="!hide_controls" class="input-group floating-switch">
+        <!-- <label class="form-switch">
+          <input type="checkbox" v-model="draw_mask_mode" @change="drawMaskModeChanged">
+          <i class="form-icon"></i> <span class="hide-on-mobile">Redraw Mask</span>
+        </label> -->
+        <button v-if="current_task_name === 'segmentation'" style="background-color:transparent" class="btn" title="navigate to well" @click="SelectVirusWell()">&nbsp;SelectVirusWell</button>
+        <button v-if="current_task_name === 'covid-annotation'" style="background-color:transparent" class="btn" title="specify a well to download" @click="SpecifyDownloadFov()">&nbsp;DownloadFov</button>
+        <button v-if="current_task_name === 'covid-annotation'" style="background-color:transparent" class="btn" title="navigate to well" @click="goToWell()">&nbsp;GoToWell</button>
+        <button style="background-color:transparent" class="btn" title="report&followup" @click="report()"><i class="icon icon-share"></i></button>&nbsp;&nbsp;
+        <label class="form-switch " v-show="current_task_name === 'segmentation'">
+          <input type="checkbox" v-model="freehand_mode" @change="freehandChanged">
+          <i class="form-icon"></i> <span class="hide-on-mobile">Freehand</span>
+        </label>
+        <button style="background-color:transparent" class="btn btn-action s-circle" title="home" @click="home()"><i class="icon icon-cross"></i></button>&nbsp;&nbsp;
+      </div>
+
+      <!-- channels -->
+      <div v-show="!hide_controls" :style="{bottom: current_image_data.label_display_mode==='multiple'?'-20px': '20px'}" class="form-group floating-channel-btn">
+        <label v-if="current_task_name === 'segmentation'" class="form-checkbox channel-controls">
+          <input v-model="show_segmentation" @change="vector_source.changed()" name="hide segmentation mask" type="checkbox">
+          <i class="form-icon"></i> Segmentation
+        </label>
+        <label v-for="ch in channel_settings" :key="ch" v-show="ch.name!=='merged'" class="form-checkbox channel-controls">
+          <input v-model="ch.show" :name="ch.name" @change="channelSettingsUpdated" type="checkbox">
+          <i class="form-icon"></i> {{ch.name=='Microtubule'? 'SARS-CoV-2': ch.name}}
+        </label>
+        <button :disabled="loading" v-show="current_task_name === 'segmentation'" :class="{'exclusive-label-btn': current_image_data.exclusive_label === 'Discard'}" class="btn btn-sm small-btn channel-controls" @click="toggleExclusiveLabels('Discard')">Discard</button>
+        <button :disabled="!mask_history||mask_history.length<=0" v-show="current_task_name === 'segmentation'" class="btn btn-sm small-btn channel-controls" @click="undoAnnotation()">Undo</button>
+        <button class="btn btn-sm s-circle channel-controls" style="background-color: transparent;" title="info" @click="info()"><i class="icon icon-message"></i></button>
+        <br>
+        <div v-if="current_task_name==='covid-annotation'">
+          <div class="btn-group" >
+            <button :disabled="!previous_well_image_available  || loading" class="btn transparent-image-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back (image)</button>
+            <button :disabled="!next_well_image_available  || loading" class="btn transparent-image-btn" @click="nextImage()">Next (image)&nbsp;<i class="icon icon-forward"></i></button>
+          </div>
+          <br>
+          <div class="btn-group">
+            <button :disabled="current_well_index<=0  || loading" class="btn transparent-btn" @click="previousWell()"><i class="icon icon-back"></i>&nbsp;<b>Back</b></button>
+            <button :disabled="loading" class="btn transparent-btn" @click="saveAnnotation()">&nbsp;<b>Save</b></button>
+            <button class="btn transparent-btn" :class="{'exclusive-label-btn': discard_well}" :disabled="loading" @click="toggleCovidDiscardLabel()">&nbsp;<b>Discard</b></button>
+            <!--remove current_well_index>=cached_well_data.length ||-->
+            <button :disabled="loading" class="btn transparent-btn" @click="nextWell()"><b>Next</b>&nbsp;<i class="icon icon-forward"></i></button>
+          </div>
+        </div>
+      </div>
+      <template v-if="current_task_name==='covid-annotation'">
+        <div v-show="!hide_controls" class="floating-right-btn">
+          <div class="columns is-mobile" v-for="annotation_category in config_data.annotation_categories">
+            <div>
+              <h5>{{annotation_category}}</h5>
+              <template v-for="(label, display_label) in config_data.labels.location_labels">
+                <button :key="label" :disabled="current_image_data.labels[annotation_category].labels.exclusive_label||discard_well || loading" class="column btn covid-label-btn" :class="{'selected-label-btn': current_image_data.labels[annotation_category].labels.location_labels[config_data.labels.location_labels[display_label]]}" @click="toggleCovidLabel(annotation_category, config_data.labels.location_labels[display_label])">{{display_label.slice(0,12)+(display_label.length>12?'.': '')}}</button>
+                <!-- <div class="break hide-on-mobile"></div> -->
+              </template>
+              <br>
+              <template class="btn-group">
+                <button class="btn btn-sm channel-controls scv-label-btn" :disabled="current_image_data.labels[annotation_category].labels.exclusive_label||discard_well||loading" :class="{'selected-scv-label-btn': current_image_data.labels[annotation_category].labels.single_cell_variation}" @click="toggleCovidSCVLabel(annotation_category)">{{config_data.labels.single_cell_variation}}</button>
+              </template>
+              <template class="btn-group">
+                <button v-for="el in config_data.labels.exclusive_labels" :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="(current_image_data.labels[annotation_category].labels.exclusive_label&&current_image_data.labels[annotation_category].labels.exclusive_label!==el)||discard_well||loading" :class="{'exclusive-covid-label-btn': current_image_data.labels[annotation_category].labels.exclusive_label ===el}" @click="toggleCovidExclusiveLabels(annotation_category, el)">{{el}}</button>
+              </template>
+            </div>            
+          </div>
+        </div>
+        <span v-show="!hide_controls" class="h3 floating-label">
+          <h6>{{identify_label}}</h6>
+          <h5>{{current_image_data.cell_id.split('/')[0]}} (<span>annotation_variation: <b>{{annotation_variation}}</b></span>)</h5>
+          <button class="btn btn-sm channel-controls scv-label-btn" :disabled="discard_well||loading" :class="{'selected-scv-label-btn': whole_scv_spatial}" @click="toggleCovidWholeSCV('scv_spatial')">SCV_Spatial</button>
+          <button class="btn btn-sm channel-controls scv-label-btn" :disabled="discard_well||loading" :class="{'selected-scv-label-btn': whole_scv_intensity}" @click="toggleCovidWholeSCV('scv_intensity')">SCV_Intensity</button>
+        </span>
+      </template>
+      <template v-if="current_task_name==='precise-annotation'">	
+        <div v-show="!hide_controls" class="floating-right-btn">	
+          <div class="columns">	
+            <template v-for="group in LIMS_LOCATION_LABELS">	
+              <template v-for="label in group">	
+                <button style="font-size: 12px" :key="label" v-if="LIMS_TO_IF_CSV[label] && current_image_data.location_labels[LIMS_TO_IF_CSV[label]] !== undefined" :disabled="current_image_data.exclusive_label" @click="toggleLabel(LIMS_TO_IF_CSV[label])" class="column btn label-btn" :class="{'selected-label-btn': current_image_data.location_labels[LIMS_TO_IF_CSV[label]]}">{{label.slice(0,12)+(label.length>12?'.': '')}}</button>	
+              </template>	
+              <!-- <div class="break hide-on-mobile"></div> -->	
+            </template>	
+            <template v-for="(loc, k) in unsupported_labels">	
+              <button  :key="k" :disabled="current_image_data.exclusive_label"  @click="toggleLabel(k)" class="column btn label-btn" :class="{'selected-label-btn': loc}">{{k.slice(0,12)+(k.length>12?'.': '')}}</button>	
+            </template>	     
+          </div>	
+            <br>	
+          <div class="btn-group" v-if="current_task_name !== 'segmentation'">	
+            <button v-for="el in current_image_data.exclusive_labels"  :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="current_image_data.exclusive_label&&current_image_data.exclusive_label!==el" :class="{'exclusive-label-btn': current_image_data.exclusive_label ===el}" @click="toggleExclusiveLabels(el)">{{el}}</button>	
+          </div>	
+          <br>	
+          <br>	
+          <div class="btn-group">	
+            <button :disabled="current_image_index<=0  || loading" class="btn transparent-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back</button>	
+            <button :disabled="current_image_data.exclusive_label" class="btn transparent-btn" @click="saveAnnotation()">&nbsp;Save</button>	
+            <button :disabled="current_image_index>=cached_image_data.length  || loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>	
+          </div>	
+        </div>
+      </template> 
+      <template v-if="current_image_data.label_display_mode==='single'">
+        <div v-show="!hide_controls" class="btn-group floating-bottom-btn">
+          <button :disabled="current_image_index<=0 || loading" class="btn transparent-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back</button>
+          <button :disabled="current_image_data.exclusive_label" class="btn transparent-btn" @click="selectLabel(true)" :class="{'selected-label-btn': current_image_data.location_labels[current_image_data.single_label]===true}"><i class="icon icon-check"></i>&nbsp;True</button>
+          <button :disabled="current_image_data.exclusive_label" class="btn transparent-btn" @click="selectLabel(false)" :class="{'selected-label-btn': current_image_data.location_labels[current_image_data.single_label]===false}"><i class="icon icon-cross"></i>&nbsp;False</button>
+          <button :disabled="current_image_index>=cached_image_data.length || loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>
+        </div>
+        <span v-show="!hide_controls" class="h3 floating-label">{{current_image_data.single_label}}</span>
+      </template>
+      <template v-if="current_task_name === 'segmentation'">
+        <div v-show="!hide_controls" class="btn-group floating-bottom-btn">
+          <button :disabled="current_image_index===0 || loading" class="btn transparent-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back</button>
+          <button :disabled="current_image_data.exclusive_label || !selected_feature" class="btn transparent-btn" @click="deleteAnnotation()" ><i class="icon icon-cross"></i>Remove&nbsp;</button>
+          <button :disabled="current_image_data.exclusive_label || loading" class="btn transparent-btn"  @click="saveMaskAnnotation();nextImage();"><i class="icon icon-check"></i>
+            Save
+          </button>
+          <button :disabled="current_image_index>=cached_image_data.length || loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>
+        </div>
+      </template>
+      
+      <div v-if="loading" class="loading loading-lg floating"></div>
+      <div id="map" ref="map" v-show="current_panel=='imageviewer'" :style="{height: innerHeight}"></div>
+    </div>
+  </div>
+</window>
+<style lang="css">
+  body{
+    color: #448aff!important;
+    overflow: hidden;
+  }
+  .centered-panel{
+    background-color: #448aff0f;
+    width: 400px;
+    height: 450px;
+    max-height: 100%;
+    max-width: 100%;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    -moz-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .statistics-panel{
+    background-color: #448aff0f;
+    width: 600px;
+    height: auto;
+    min-height: 300px;
+    max-width: 800px;
+    max-height: 100%;
+    max-width: 100%;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    -moz-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .ol-layers:first-child{
+    background-color: black;
+  }
+
+  .floating-label{
+    color:#ffefdbc2;
+    position: absolute;
+    left: 50%;
+    z-index: 999;
+    top: 40px;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    -moz-transform: translate3d(-50%, -50%, 0);
+      transform: translate3d(-50%, -50%, 0);
+  }
+
+  @media screen and (max-width: 800px) {
+    .floating-label{
+      top: 90px!important;
+    }
+  }
+  
+  .floating-switch{
+    position: absolute;
+    right: 5px;
+    z-index: 999;
+    top: 10px;
+  }
+
+  .ol-mouse-position{
+    top:unset;
+    bottom: 3px;
+  }
+  @media all and (max-width: 600px) {
+    .floating-channel-btn{
+      text-align: left!important;
+      top: 10px!important;
+      bottom: unset!important;
+      left: 5px!important;
+      -webkit-transform:unset!important;
+      -moz-transform:unset!important;
+      transform: unset!important;
+      bottom: 60px;
+    }
+    .channel-controls{
+      display: block;
+    }
+  }
+
+  @media all and (min-width: 600px) {
+    .channel-controls{
+      display: inline-block;
+    }
+  }
+
+  .floating-channel-btn{
+    text-align: center;
+    width: 100%;
+    position: absolute;
+    left: 50%;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    -moz-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+    bottom: 20px;
+    z-index: 666;
+  }
+
+
+  .floating-bottom-btn {
+    position: absolute;
+    left: calc(50% - 180px);
+    bottom: 5px;
+    z-index: 999;
+  }
+  @media all and (max-width: 900px) {
+    .floating-right-btn{
+      width: 220px!important;
+    }
+  }
+  .floating-right-btn{
+    position: absolute;
+    right: 3px;
+    top: 60px;
+    width: 330px;
+    z-index: 999;
+  }
+  .floating-left-btn{
+    position: absolute;
+    left: 3px;
+    top: 80px;
+    width: 330px;
+    z-index: 999;
+  }
+  .label-btn {
+    padding-top: 0px;
+    font-size: small;
+    margin-left: 0px;
+    height: 26px;
+    flex: none;
+    width: 110px;
+    background-color:#fff3;
+  }
+  .covid-label-btn {
+    padding-top: 0px;
+    font-size: 13px;
+    margin-left: 0px;
+    height: 20px;
+    flex: none;
+    width: 110px;
+    background-color:#fff3;
+  }
+  .scv-label-btn{
+    padding-top: 0px;
+    font-size: 13px;
+    margin-left: 0px;
+    height: 20px;
+    flex: none;
+    width: 110px;
+    background-color:#17202A;
+  }
+  .exclusive-btn{
+    height: 23px;
+    width: 90px;
+    background: transparent;
+    border: none;
+    background-color:#fff3;
+    margin-bottom: 3px;
+  }
+  .exclusive-label-btn{
+    background-color: rgb(248, 27, 2)!important;
+  }
+  .release-unfinished-btn:hover{
+    background-color: rgb(223, 129, 85)!important;
+  }
+  .exclusive-covid-label-btn{
+    background-color: rgb(146, 49, 49)!important;
+  }
+  .highlight-btn{
+    background-color: white!important;
+  }
+  .release-unfinished-btn, .release-unfinished-btn:focus, .label-btn:hover, .label-btn:focus, .covid-label-btn:hover, .scv-label-btn:hover, .exclusive-btn:hover{
+    background-color:rgba(255, 255, 255, 0.42);
+  }
+  .covid-label-btn:focus,  .exclusive-btn:focus{
+    background-color: #fff3;
+  }
+  .scv-label-btn:focus{
+    background-color: #17202A;
+  }
+  .selected-label-btn{
+    background-color: #3580ff7d!important;
+    color: white!important;
+  }
+  .selected-scv-label-btn{
+    background-color: #35ffab7d!important;
+    color: white!important;
+  }
+  .break {
+    flex-basis: 100%;
+    height: 0;
+  }
+  .transparent-btn, .transparent-btn:focus {
+    width: 90px;
+    background-color:#fff3;
+  }
+  .transparent-btn:hover {
+    background-color:rgba(255, 255, 255, 0.42);
+  }
+  .transparent-image-btn, .transparent-image-btn:focus {
+    width: 150px;
+    background-color:rgba(87, 100, 29, 0.274);
+  }
+  .transparent-image-btn:hover {
+    background-color:rgba(255, 255, 255, 0.42);
+  }
+  .small-btn{
+    width: 60px;
+    background: transparent;
+    border: none;
+    background-color:#fff3;
+    margin-bottom: 3px;
+  }
+  .btn-well{
+    width: 70px;
+    background: transparent;
+    border: none;
+    background-color:#fff3;
+    margin-bottom: 3px;
+  }
+  .median-btn{
+    width: 80px;
+    background: transparent;
+    border: none;
+    background-color:#fff3;
+    margin-bottom: 3px;
+  }
+  .floating {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+  }
+  #toolbar {
+    position: absolute;
+    top: 112px;
+    left: 10px;
+  }
+  #toolbar > div:nth-child(1){
+    fill: #448aff;
+  }
+
+  .ol-layer{
+    top: 0px;
+  }
+
+  #map{
+    max-height: 100%;
+    min-height: 50vh!important;
+  }
+  .icon::before {
+    position: relative;
+  }
+  .navbar {
+    padding-left: 10px;
+  }
+  .navbar .navbar-brand {
+    font-size: 1.5rem;
+    text-decoration: none;
+  }
+  
+  .mouse-position{
+    padding-left: 124px;
+    padding-top: 10px;
+  }
+  @media all and (max-width: 512px) { /* Change Width Here */
+    .hide-on-mobile {
+        display: none;
+    }
+  }
+</style>
