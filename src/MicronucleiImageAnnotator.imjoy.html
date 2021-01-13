@@ -1501,9 +1501,7 @@
             body: JSON.stringify({
               report:{
                 comment: comment,
-                task_id: this.current_image_data.cell_id,
-                location_labels: this.current_image_data.location_labels,
-                exclusive_labels: this.current_image_data.exclusive_labels,
+                task_id: this.current_image_data.cell_id.split('/')[0],
               },
               image: this.current_displayed_image,
               screenshot: screenshot
