@@ -353,9 +353,10 @@
       LIMS_TO_IF_CSV: LIMS_TO_IF_CSV,
       LIMS_VALUES: Object.values(LIMS_TO_IF_CSV),
       comment: null,
+      no_micronuclei: null,
       // config url
       config_data: null,
-      config_url: "https://raw.githubusercontent.com/haoxusci/imjoy-plugin-config/master/config/Covid19ImageAnnotator.imjoy.config.json"
+      config_url: "https://raw.githubusercontent.com/haoxusci/imjoy-plugin-config/master/config/MicronucleiAnnotator.imjoy.config.json"
     },
     mounted(){
       this.$nextTick(async()=>{
@@ -922,6 +923,7 @@
           return
         }
         this.comment = false
+        this.no_micronuclei = false
         if(!this.isMobile) api.showStatus(imageData.cell_id)
         console.log('current image: ', imageData)
         this.current_image_data = imageData;
@@ -988,6 +990,9 @@
         if (this.current_image_data.labels_changed){
           sendData.labels = {}
           let complete_indicator = {}
+          // add for micronuclei annotation only, from here
+
+          // add for micronuclei annotation only, till here
           const annotation_types = Object.keys(this.current_image_data.labels)
           for(let k of Object.keys(this.current_image_data.labels)){
             sendData.labels[k] = {}
@@ -1142,6 +1147,17 @@
           this.current_image_data.labels[annotation_category].labels.exclusive_label = type
           
         }
+        if(this.no_micronuclei&&(annotation_category==='MicroNuclei Found?')){
+          this.current_image_data.labels['Protein in MicroNuclei?'].labels.exclusive_label = false
+        }
+        if(this.current_image_data.labels['MicroNuclei Found?'].labels.exclusive_label === 'No'){
+          this.no_micronuclei = true
+          this.current_image_data.labels['Protein in MicroNuclei?'].labels.exclusive_label = 'No'
+        }else{
+          this.no_micronuclei = false
+        }
+        console.log(JSON.stringify(this.current_image_data.labels['MicroNuclei Found?'].labels.exclusive_label))
+        console.log(JSON.stringify(this.no_micronuclei))
         this.$forceUpdate()
         // this one is temporarily muted
         //await this.uploadAnnotation();
@@ -1673,9 +1689,9 @@
           <br>
           <div v-if="current_task_name==='precise-annotation'">
             <div class="btn-group" >
-              <button :disabled="loading" class="btn transparent-image-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back (image)</button>
+              <button :disabled="loading" class="btn transparent-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back</button>
               <button class="btn transparent-btn" @click="saveAnnotation()">&nbsp;Save</button>
-              <button :disabled="loading" class="btn transparent-image-btn" @click="nextImage()">Next (image)&nbsp;<i class="icon icon-forward"></i></button>
+              <button :disabled="loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>
             </div>
           </div>
         </div>
@@ -1686,7 +1702,7 @@
               <div>
                 <h5>{{annotation_category}}</h5>
                 <template class="btn-group">
-                  <button v-for="el in config_data.labels.exclusive_labels" :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="(current_image_data.labels[annotation_category].labels.exclusive_label&&current_image_data.labels[annotation_category].labels.exclusive_label!==el)||loading" :class="{'exclusive-covid-label-btn': current_image_data.labels[annotation_category].labels.exclusive_label ===el}" @click="toggleCovidExclusiveLabels(annotation_category, el)">{{el}}</button>
+                  <button v-for="el in config_data.labels.exclusive_labels[annotation_category]" :key="el" :disabled="annotation_category!=='MicroNuclei Found?'&&no_micronuclei" class="btn btn-sm exclusive-btn channel-controls" :class="{'selected-exclusive-btn': current_image_data.labels[annotation_category].labels.exclusive_label===el}" :disabled="(current_image_data.labels[annotation_category].labels.exclusive_label&&current_image_data.labels[annotation_category].labels.exclusive_label!==el)||loading" :class="{'exclusive-covid-label-btn': current_image_data.labels[annotation_category].labels.exclusive_label ===el}" @click="toggleCovidExclusiveLabels(annotation_category, el)">{{el}}</button>
                 </template>
                 <br>
                 <br>
@@ -1717,7 +1733,7 @@
             </div>
               <br>
             <div class="btn-group" v-if="current_task_name !== 'segmentation'">
-              <button v-for="el in current_image_data.exclusive_labels"  :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="current_image_data.exclusive_label&&current_image_data.exclusive_label!==el" :class="{'exclusive-label-btn': current_image_data.exclusive_label ===el}" @click="toggleExclusiveLabels(el)">{{el}}</button>
+              <button v-for="el in current_image_data.exclusive_labels"  :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="current_image_data.exclusive_label&&current_image_data.exclusive_label!==el" :class="{'exclusive-label-btn': current_image_data.exclusive_label===el}" @click="toggleExclusiveLabels(el)">{{el}}</button>
             </div>
             <br>
             <br>
@@ -1888,12 +1904,23 @@
       background-color:#fff3;
     }
     .exclusive-btn{
-      height: 26px;
-      width: 95px;
-      background: transparent;
-      border: none;
-      background-color:#fff3;
-      margin-bottom: 3px;
+      padding-top: 0px;
+      font-size: 13px;
+      margin-left: 0px;
+      height: 20px;
+      flex: none;
+      width: 110px;
+      background-color:#17202A;
+    }
+    .exclusive-btn:focus{
+      background-color: #17202A;
+    }
+    .selected-exclusive-btn{
+      background-color: #35ffab7d!important;
+      color: white!important;
+    }
+    .exclusive-btn:hover{
+      background-color:rgba(255, 255, 255, 0.42);
     }
     .exclusive-label-btn{
       background-color: rgb(248, 27, 2)!important;
