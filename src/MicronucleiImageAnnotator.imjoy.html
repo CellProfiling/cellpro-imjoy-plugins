@@ -1695,7 +1695,7 @@
         </div>
 
         <template v-if="current_task_name==='precise-annotation'">
-          <div v-show="!hide_controls" class="floating-right-btn">
+          <div v-show="!hide_controls" class="floating-label-btn">
             <div class="columns is-mobile" v-for="annotation_category in config_data.annotation_categories">
               <div>
                 <h5>{{annotation_category}}</h5>
@@ -1704,8 +1704,7 @@
                 </template>
                 <br>
                 <br>
-                <br>
-                <br>
+
               </div>            
             </div>
           </div>
@@ -1871,6 +1870,12 @@
       position: absolute;
       left: calc(50% - 180px);
       bottom: 5px;
+      z-index: 999;
+    }
+    .floating-label-btn {
+      position: absolute;
+      left: calc(70% - 50px);
+      bottom: 250px;
       z-index: 999;
     }
     @media all and (max-width: 900px) {
