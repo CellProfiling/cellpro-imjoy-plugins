@@ -107,87 +107,92 @@
     });
   };
   async function composeChannels(channels, channel_settings, alpha, brightness){
-    const color_channels = [
-      ['Microtubule', 'ER'],
-      ['Protein', 'ER'],
-      ['Nuclei'],
-      ['Mask']
-    ]
-    // replace channel name with data
-    for(let i=0;i<color_channels.length;i++){
-      for(let j=0;j<color_channels[i].length;j++){
-        const ch_name = color_channels[i][j]
-        if(channel_settings[ch_name].show){
-          color_channels[i][j] = await getImageData(channels[ch_name])
-        }
-      }
-      // filter out empty channels
-      color_channels[i] = color_channels[i].filter(item=>typeof(item)!=='string')
-    }
-    // set canvas
-    const canvas = document.createElement('canvas')
-    for(let i=0;i<color_channels.length;i++){
-      if(color_channels[i].length){
-        canvas.width = color_channels[i][0].width
-        canvas.height = color_channels[i][0].height
-        break
+  //if(this.current_task_name==='covid-annotation'){
+  //      if (Object.keys(channel_settings).includes('Mask')){
+  //        delete channel_settings['Mask']
+  //      }
+  //    }
+  const color_channels = [
+    ['Microtubule', 'ER'],
+    ['Protein', 'ER'],
+    ['Nuclei']
+  ]
+  //['Mask'] @hao, this is something to be fixed for other modes
+  // replace channel name with data
+  for(let i=0;i<color_channels.length;i++){
+    for(let j=0;j<color_channels[i].length;j++){
+      const ch_name = color_channels[i][j]
+      if(channel_settings[ch_name].show){
+        color_channels[i][j] = await getImageData(channels[ch_name])
       }
     }
-    const ctx = canvas.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const channel_offset = canvas.width * canvas.height * 4
-    let i, j, v, src, pixel_index;
-    const data = imgData.data
-    // set data channels
-    if(alpha<0) alpha = 0;
-    if(alpha>1) alpha = 1;
-    brightness = brightness || 1.0;
-    for(j=0;j<3;j++){
-      if(!color_channels[j].length){
-        continue
-      }
-      if(brightness===1){
-        for(let k=0; k<color_channels[j].length; k++){
-          src = color_channels[j][k].data;
-          for(i=0;i<channel_offset;i++){
-              pixel_index = i*4+j
-              v = data[pixel_index];
-              v = v + src[i]
-              data[pixel_index] = v>255?255:v;
-          }
-        }
-      }else{
-        for(let k=0; k<color_channels[j].length; k++){
-          src = color_channels[j][k].data;
-          for(i=0;i<channel_offset;i++){
-              pixel_index = i*4+j
-              v = data[pixel_index];
-              v = v + src[i]
-              if(brightness!==1) v = v*brightness;
-              data[pixel_index] = v>255?255:parseInt(v);
-          }
-        }
-      }
+    // filter out empty channels
+    color_channels[i] = color_channels[i].filter(item=>typeof(item)!=='string')
+  }
+  // set canvas
+  const canvas = document.createElement('canvas')
+  for(let i=0;i<color_channels.length;i++){
+    if(color_channels[i].length){
+      canvas.width = color_channels[i][0].width
+      canvas.height = color_channels[i][0].height
+      break
     }
-    // set alfa channel for mask
-    if(color_channels[3].length){
-      src = color_channels[3][0].data;
-      for(i=0;i<channel_offset;i++){
-        if(src[i]>0){
-          data[i*4+3] = parseInt(alpha*255);
-        }
-        else{
-          data[i*4+3] = 255;
+  }
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const channel_offset = canvas.width * canvas.height * 4
+  let i, j, v, src, pixel_index;
+  const data = imgData.data
+  // set data channels
+  if(alpha<0) alpha = 0;
+  if(alpha>1) alpha = 1;
+  brightness = brightness || 1.0;
+  for(j=0;j<3;j++){
+    if(!color_channels[j].length){
+      continue
+    }
+    if(brightness===1){
+      for(let k=0; k<color_channels[j].length; k++){
+        src = color_channels[j][k].data;
+        for(i=0;i<channel_offset;i++){
+            pixel_index = i*4+j
+            v = data[pixel_index];
+            v = v + src[i]
+            data[pixel_index] = v>255?255:v;
         }
       }
     }else{
-      for(i=0;i<channel_offset;i++){
-      data[i*4+3] = 255; 
+      for(let k=0; k<color_channels[j].length; k++){
+        src = color_channels[j][k].data;
+        for(i=0;i<channel_offset;i++){
+            pixel_index = i*4+j
+            v = data[pixel_index];
+            v = v + src[i]
+            if(brightness!==1) v = v*brightness;
+            data[pixel_index] = v>255?255:parseInt(v);
+        }
       }
     }
-    ctx.putImageData(imgData, 0, 0);
-    return {url: canvas.toDataURL(), width: canvas.width, height: canvas.height}
   }
+  // set alfa channel for mask
+  if(color_channels.length==4 && color_channels[3].length){
+    src = color_channels[3][0].data;
+    for(i=0;i<channel_offset;i++){
+      if(src[i]>0){
+        data[i*4+3] = parseInt(alpha*255);
+      }
+      else{
+        data[i*4+3] = 255;
+      }
+    }
+  }else{
+    for(i=0;i<channel_offset;i++){
+    data[i*4+3] = 255; 
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return {url: canvas.toDataURL(), width: canvas.width, height: canvas.height}
+}
   
   const imageDataTemplate = {
     extend: null,
@@ -346,7 +351,11 @@
       current_displayed_image: null,
       LIMS_LOCATION_LABELS: LIMS_LOCATION_LABELS,
       LIMS_TO_IF_CSV: LIMS_TO_IF_CSV,
-      LIMS_VALUES: Object.values(LIMS_TO_IF_CSV)
+      LIMS_VALUES: Object.values(LIMS_TO_IF_CSV),
+      comment: null,
+      // config url
+      config_data: null,
+      config_url: "https://raw.githubusercontent.com/haoxusci/imjoy-plugin-config/master/config/Covid19ImageAnnotator.imjoy.config.json"
     },
     mounted(){
       this.$nextTick(async()=>{
@@ -531,6 +540,8 @@
         `)
       },
       async login(){
+        //load config data
+        this.config_data = await this.fetchConfig(this.config_url)
         const formData = new FormData();
         formData.append('username', this.user.username);
         formData.append('password', this.user.password);
@@ -645,9 +656,22 @@
         this.channel_settings = {};
         this.getNewImageBatch(this.current_task_name, true);
       },
+      async fetchConfig(config_url){
+        const response = await fetch(config_url)
+        if (response.ok){
+          const res = await response.json()
+          return res
+        }else{
+          api.showMessage('Loading error: cannot load config file')
+          throw 'Loading error: cannot load config file'
+        }
+      },
       async fetchCellImage(cell_id){
         const imageData = JSON.parse(JSON.stringify(imageDataTemplate));
         imageData.cell_id = cell_id;
+        if(this.current_task_name==='precise-annotation'){
+          imageData.cell_id = cell_id + '/covid';
+        }
         let image_url = "/images/" + this.current_task_name + "/" + imageData.cell_id;
         imageData.extend = this.current_extend_value;
         image_url += "?extend="+imageData.extend+"&maskout=1";
@@ -680,6 +704,32 @@
         }
         // record the current cell indice list
         this.updateSavedCellIdx(imageData)
+
+        // Here is for covid-annotation only
+      if(this.current_task_name==='precise-annotation'){
+        if (Object.keys(imageData.channels).includes('Mask')){
+          delete imageData.channels['Mask']
+        }
+        // remove mask_geojson
+        imageData.mask_geojson.features = null;
+        // set labels
+        let index, annotation_category, record_label, k, v
+        imageData.labels = {}
+        for (index in this.config_data.annotation_categories){
+          annotation_category = this.config_data.annotation_categories[index]
+          imageData.labels[annotation_category] = {}
+          imageData.labels[annotation_category].labels = {}
+          imageData.labels[annotation_category].labels.location_labels = {}
+          for (k in this.config_data.labels.location_labels){
+            record_label =  this.config_data.labels.location_labels[k]
+            imageData.labels[annotation_category].labels.location_labels[record_label] = false
+          }
+          imageData.labels[annotation_category].labels.exclusive_label = false
+          imageData.labels[annotation_category].labels.single_cell_variation = false
+        }
+        // should rename here for the saved_location_label @ hao
+        imageData.saved_location_label = Object.assign({}, imageData.labels)
+      }
   
         return imageData
       },
@@ -818,9 +868,16 @@
         }
       },
       async saveAnnotation(){
-        this.current_image_data.exclusive_label = false;
-        this.current_image_data.labels_changed = true;
-        await this.nextImage();
+        if(this.current_task_name!=='precise-annotation'){
+          this.current_image_data.exclusive_label = false;
+          this.current_image_data.labels_changed = true;
+          await this.nextImage();
+        }else{
+          this.current_image_data.labels_changed = true;
+          await this.uploadAnnotation();
+          this.$forceUpdate()
+        }
+      
       },
       async nextImage(){
         this.loadMoreIfNeeded();
@@ -864,6 +921,7 @@
           console.error('no image data to show.')
           return
         }
+        this.comment = false
         if(!this.isMobile) api.showStatus(imageData.cell_id)
         console.log('current image: ', imageData)
         this.current_image_data = imageData;
@@ -882,7 +940,7 @@
             window.onresize();
             try{
                 await this.displayMap(imageData.channels, this.channel_settings);
-                this.showMaskAnnotation(imageData.mask_geojson);
+                //this.showMaskAnnotation(imageData.mask_geojson);
             }
             catch(e){
               console.error(e)
@@ -909,19 +967,61 @@
         this.loading = false;
       },
       async uploadAnnotation(){
-        // skip upload annotation if image is annotated and no new change
-        if ((!this.current_image_data.mask_adjusted)&&(!this.current_image_data.labels_changed)){
-          return
-        }
-        // Default options are marked with *
-        const sendData = {}
-        
+      // skip upload annotation if image is annotated and no new change
+      if ((!this.current_image_data.mask_adjusted)&&(!this.current_image_data.labels_changed)){
+        return
+      }
+      // Default options are marked with *
+      const sendData = {}
+      
+      if (this.current_task_name==='precise-annotation'){
         if(this.current_image_data.start_time){
           this.current_image_data.time_elapsed = new Date().getTime() - this.current_image_data.start_time;
           sendData.start_time = this.current_image_data.start_time;
           sendData.time_elapsed = this.current_image_data.time_elapsed;
+          if (this.comment){sendData.comment = this.comment}
         }
-        
+      // consider about the discard button later
+        if (this.current_image_data.labels_changed){
+          sendData.labels = "Discard"
+        }  
+        if (this.current_image_data.labels_changed){
+          sendData.labels = {}
+          let complete_indicator = {}
+          const annotation_types = Object.keys(this.current_image_data.labels)
+          for(let k of Object.keys(this.current_image_data.labels)){
+            sendData.labels[k] = {}
+            sendData.labels[k].labels = {}
+            complete_indicator[k] = false
+            if(this.current_image_data.labels[k].labels.exclusive_label){
+              complete_indicator[k] = true
+              sendData.labels[k].labels.exclusive_label = this.current_image_data.labels[k].labels.exclusive_label;
+            }
+            else{
+              sendData.labels[k].labels.location_labels = this.current_image_data.labels[k].labels.location_labels;
+              for (let loc in sendData.labels[k].labels.location_labels){
+                if (sendData.labels[k].labels.location_labels[loc]){
+                  complete_indicator[k] = true
+                  break
+                }
+              }
+              sendData.labels[k].labels.single_cell_variation = this.current_image_data.labels[k].labels.single_cell_variation
+            }
+          }
+          console.log(JSON.stringify(complete_indicator))
+          if (!(complete_indicator[annotation_types[0]]&&complete_indicator[annotation_types[1]])){
+            const answer = await api.confirm("Incomplete annotation (either Negative/Unspecific or protein labels should be selected for each annotation group). Please press 'OK' if move on without saving, or 'Cancel' to complete the annotation'?")
+            if (!answer){
+              this.stay_at_current_well = true
+              return
+            }else{
+              console.log('you press OK!!!')
+              this.current_image_data.labels_changed = false
+              return
+            }
+          }
+        }
+      }else{
         if (this.current_image_data.labels_changed){
           if(this.current_image_data.exclusive_label){
             sendData.labels = this.current_image_data.exclusive_label;
@@ -960,32 +1060,44 @@
           sendData.mask = this.current_image_data.mask_geojson;
           sendData.mask_diff = this.getMaskDiff(this.current_image_data);
         };
-      
-        // this is the url to send the current annotation
-        const sub_url = "/annotations/" + this.current_task_name + "/" + this.current_image_data.cell_id;
-        const url_post = this.selected_server_url + sub_url;
-        const response = await fetch(url_post, {
-            method: 'POST',
-            mode: 'cors',
-            cache: 'no-cache',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${this.user.access_token}`,
-            },
-            body: JSON.stringify(sendData)
-          });
-        const res= await response.json();
-        if(res.success){
-          this.current_image_data.mask_adjusted = false;
-          this.current_image_data.labels_changed = false;
+      }
+   
+      // this is the url to send the current annotation
+      console.log(JSON.stringify(sendData))
+      let sub_url = "/annotations/" + this.current_task_name + "/"
+      if(this.current_task_name==='precise-annotation'){
+        sub_url = sub_url + this.current_image_data.cell_id.split('/')[0];
+      }else{
+        sub_url = sub_url + this.current_image_data.cell_id;
+      }
+      console.log(sub_url)
+      const url_post = this.selected_server_url + sub_url;
+      const response = await fetch(url_post, {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-cache',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.user.access_token}`,
+          },
+          body: JSON.stringify(sendData)
+        });
+      const res= await response.json();
+      if(res.success){
+        this.current_image_data.mask_adjusted = false;
+        this.current_image_data.labels_changed = false;
+        if(this.current_task_name==='precise-annotation'){
+          this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.labels)
+        }else{
           this.current_image_data.saved_location_label = Object.assign({}, this.current_image_data.location_labels)
           this.updateSavedCellIdx(this.current_image_data)
         }
-        else{
-          alert('Failed to upload the annotaiton, error: ' + res.error);
-          throw new Error('Failed to upload the annotaiton.')
-        };
-      },
+      }
+      else{
+        alert('Failed to upload the annotaiton, error: ' + res.error);
+        throw new Error('Failed to upload the annotaiton.')
+      };
+    },
       async drawMaskModeChanged(){
         if(this.draw_mask_mode){
           this.loading = true;
@@ -1017,6 +1129,22 @@
         }
         this.$forceUpdate()
         await this.uploadAnnotation();
+      },
+      async toggleCovidExclusiveLabels(annotation_category, type){
+        this.current_image_data.labels_changed = true;
+        if(this.current_image_data.labels[annotation_category].labels.exclusive_label === type){
+          // the order for the following two lines matters
+          //this.current_image_data.labels[annotation_category].labels.location_labels = Object.assign({}, this.current_image_data.saved_location_label[annotation_category].labels.location_labels)
+          this.current_image_data.labels[annotation_category].labels.exclusive_label = false;
+          // here saved_location_label includes all labels
+        }
+        else{
+          this.current_image_data.labels[annotation_category].labels.exclusive_label = type
+          
+        }
+        this.$forceUpdate()
+        // this one is temporarily muted
+        //await this.uploadAnnotation();
       },
       showMaskAnnotation(mask_geojson){
         this.vector_source.clear()
@@ -1344,6 +1472,7 @@
       async report(){
         const comment = await api.prompt('Sharing this image to the cellprofiling slack, please type your comment on this image.')
         if(comment){
+          this.comment = comment
           const screenshot = this.screenShot()
           const response = await fetch( this.selected_server_url + '/reports', {
             method: 'POST',
@@ -1541,10 +1670,40 @@
            <button :disabled="loading" v-show="current_task_name === 'segmentation'" :class="{'exclusive-label-btn': current_image_data.exclusive_label === 'Discard'}" class="btn btn-sm small-btn channel-controls" @click="toggleExclusiveLabels('Discard')">Discard</button>
           <button :disabled="!mask_history||mask_history.length<=0" v-show="current_task_name === 'segmentation'" class="btn btn-sm small-btn channel-controls" @click="undoAnnotation()">Undo</button>
           <button class="btn btn-sm s-circle channel-controls" style="background-color: transparent;" title="info" @click="info()"><i class="icon icon-message"></i></button>
+          <br>
+          <div v-if="current_task_name==='precise-annotation'">
+            <div class="btn-group" >
+              <button :disabled="loading" class="btn transparent-image-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back (image)</button>
+              <button class="btn transparent-btn" @click="saveAnnotation()">&nbsp;Save</button>
+              <button :disabled="loading" class="btn transparent-image-btn" @click="nextImage()">Next (image)&nbsp;<i class="icon icon-forward"></i></button>
+            </div>
+          </div>
         </div>
+
+        <template v-if="current_task_name==='precise-annotation'">
+          <div v-show="!hide_controls" class="floating-right-btn">
+            <div class="columns is-mobile" v-for="annotation_category in config_data.annotation_categories">
+              <div>
+                <h5>{{annotation_category}}</h5>
+                <template class="btn-group">
+                  <button v-for="el in config_data.labels.exclusive_labels" :key="el" class="btn btn-sm exclusive-btn channel-controls" :disabled="(current_image_data.labels[annotation_category].labels.exclusive_label&&current_image_data.labels[annotation_category].labels.exclusive_label!==el)||loading" :class="{'exclusive-covid-label-btn': current_image_data.labels[annotation_category].labels.exclusive_label ===el}" @click="toggleCovidExclusiveLabels(annotation_category, el)">{{el}}</button>
+                </template>
+                <br>
+                <br>
+                <br>
+                <br>
+              </div>            
+            </div>
+          </div>
+          <span v-show="!hide_controls" class="h3 floating-label">
+            <h5>{{current_image_data.cell_id.split('/')[0]}} </h5>
+          </span>
+        </template>
+
         <template v-if="current_image_data.label_display_mode==='multiple'">
           <div v-show="!hide_controls" class="floating-right-btn">
             <div class="columns">
+              <h5>{{current_image_data.cell_id.split('/')[0]}} </h5>
               <template v-for="group in LIMS_LOCATION_LABELS">
                 <template v-for="label in group">
                   <button style="font-size: 12px" :key="label" v-if="LIMS_TO_IF_CSV[label] && current_image_data.location_labels[LIMS_TO_IF_CSV[label]] !== undefined" :disabled="current_image_data.exclusive_label" @click="toggleLabel(LIMS_TO_IF_CSV[label])" class="column btn label-btn" :class="{'selected-label-btn': current_image_data.location_labels[LIMS_TO_IF_CSV[label]]}">{{label.slice(0,12)+(label.length>12?'.': '')}}</button>
