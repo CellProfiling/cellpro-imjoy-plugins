@@ -8,7 +8,7 @@
     "type": "window",
     "tags": [],
     "ui": "",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "api_version": "0.1.7",
     "description": "Annotate images for HPA single-cell image classification",
     "icon": "extension",
@@ -590,6 +590,26 @@
             this.collectChartData.splice(0, 0, [key+task_name, value])
           }
         }
+      },
+      async releaseHeld(){
+        // release to do list
+        const response = await fetch(this.selected_server_url + "/release", {
+            method: 'PATCH',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.user.access_token}`,
+            },
+          });
+        const res= await response.json();
+        if(res.success){
+          //
+        }
+        else{
+          alert('Failed to release unfinished todo tasks, error: ' + res.error);
+          throw new Error('Failed to release unfinished todo tasks.')
+        };
       },
       async drawChart() {
         const idName = this.showStatKeys.idName;
@@ -1663,6 +1683,7 @@
             <input type="checkbox" v-model="draw_mask_mode" @change="drawMaskModeChanged">
             <i class="form-icon"></i> <span class="hide-on-mobile">Redraw Mask</span>
           </label> -->
+          <button style="font: 11px arial,serif;" title="release held todo tasks by other annotators" class="btn-sm release-unfinished-btn" @click="releaseHeld()"><b>ReleaseHeld</b></button>&nbsp;&nbsp;
           <button style="background-color:transparent" class="btn" title="report" @click="report()"><i class="icon icon-share"></i></button>&nbsp;&nbsp;
           <label class="form-switch " v-show="current_task_name === 'segmentation'">
             <input type="checkbox" v-model="freehand_mode" @change="freehandChanged">
@@ -1918,6 +1939,9 @@
     .exclusive-btn:focus{
       background-color: #17202A;
     }
+    .release-unfinished-btn:hover{
+      background-color: rgb(202, 200, 133)!important;
+    }
     .selected-exclusive-btn{
       background-color: #35ffab7d!important;
       color: white!important;
@@ -1930,6 +1954,12 @@
     }
     .highlight-btn{
       background-color: white!important;
+    }
+    .release-unfinished-btn{
+      background-color:rgba(244, 248, 242, 0.434);
+    }
+    .release-unfinished-btn:focus{
+      background-color:rgba(184, 218, 167, 0.42);
     }
     .label-btn:hover, .label-btn:focus{
       background-color:rgba(255, 255, 255, 0.42);
