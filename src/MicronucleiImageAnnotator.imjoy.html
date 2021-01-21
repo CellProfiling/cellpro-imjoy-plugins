@@ -8,7 +8,7 @@
     "type": "window",
     "tags": [],
     "ui": "",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "api_version": "0.1.7",
     "description": "Annotate images for HPA single-cell image classification",
     "icon": "extension",
@@ -357,7 +357,9 @@
       // config url
       config_data: null,
       config_url: "https://raw.githubusercontent.com/haoxusci/imjoy-plugin-config/master/config/MicronucleiAnnotator.imjoy.config.json",
-      stay_at_current_image: null
+      stay_at_current_image: null,
+      navigate_to_cached_image: false,
+      navigating_to_image: null,
     },
     mounted(){
       this.$nextTick(async()=>{
@@ -903,6 +905,40 @@
         }
       
       },
+      async goToImage(){
+        const the_image = await api.prompt("Please type the image id, e.g., '0_1126_D4_3'")
+        if(!the_image){
+          console.log("no well info typed. please try again")
+          return}
+        this.stay_at_current_image = false;
+        if(this.current_image_data.labels_changed){
+          await this.uploadAnnotation();
+          if (this.stay_at_current_well)return;
+        }
+        if (this.cached_image_data.indexOf(the_image) !== -1){
+          console.log("I am here0")
+          this.navigating_to_image = this.cached_image_data.indexOf(the_image)
+          this.navigate_to_cached_image = true
+          await this.nextImage()
+        }else{
+          console.log("I am here1")
+          //const the_well = "1672_A2"
+          const insert_index = this.current_image_index + 1
+          try{
+            console.log("I am here2")
+            const imageData = await this.fetchCellImage(the_image)
+            this.cached_image_data.splice(insert_index, 0, imageData)
+            this.navigating_to_image = insert_index
+            this.navigate_to_cached_image = true
+            await this.nextImage()
+          }catch(e){
+            console.error(e)
+          }
+          finally{
+            this.loading_cache = false;
+          }
+        }
+      },
       async nextImage(){
         this.stay_at_current_image = false
         this.loadMoreIfNeeded();
@@ -912,8 +948,14 @@
           if (this.stay_at_current_image)return;
         }
         this.current_image_index++;
-        if(this.cached_image_data[this.current_image_index])
-        await this.showImage(this.cached_image_data[this.current_image_index]);
+        if(this.navigate_to_cached_image){
+          this.current_image_index = this.navigating_to_image
+          this.navigating_to_image = null;
+          this.navigate_to_cached_image = false;
+        }
+        await this.showImage(
+          this.cached_image_data[this.current_image_index]
+        );    
       },
       async checkNewMask(){
         if(!this.current_image_data.mask_adjusted){
@@ -1688,6 +1730,7 @@
             <input type="checkbox" v-model="draw_mask_mode" @change="drawMaskModeChanged">
             <i class="form-icon"></i> <span class="hide-on-mobile">Redraw Mask</span>
           </label> -->
+          <button style="font: 11px arial,serif;" title="navigate to an image" class="btn-sm release-unfinished-btn" @click="goToImage()"><b>GoToImage</b></button>&nbsp;&nbsp;
           <button style="font: 11px arial,serif;" title="release held todo tasks by other annotators" class="btn-sm release-unfinished-btn" @click="releaseHeld()"><b>ReleaseHeld</b></button>&nbsp;&nbsp;
           <button style="background-color:transparent" class="btn" title="report" @click="report()"><i class="icon icon-share"></i></button>&nbsp;&nbsp;
           <label class="form-switch " v-show="current_task_name === 'segmentation'">
