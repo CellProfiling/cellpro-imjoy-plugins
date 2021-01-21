@@ -8,7 +8,7 @@
     "type": "window",
     "tags": [],
     "ui": "",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "api_version": "0.1.7",
     "description": "Annotate images for HPA single-cell image classification",
     "icon": "extension",
@@ -916,16 +916,13 @@
           if (this.stay_at_current_well)return;
         }
         if (this.cached_image_data.indexOf(the_image) !== -1){
-          console.log("I am here0")
           this.navigating_to_image = this.cached_image_data.indexOf(the_image)
           this.navigate_to_cached_image = true
           await this.nextImage()
         }else{
-          console.log("I am here1")
           //const the_well = "1672_A2"
           const insert_index = this.current_image_index + 1
           try{
-            console.log("I am here2")
             const imageData = await this.fetchCellImage(the_image)
             this.cached_image_data.splice(insert_index, 0, imageData)
             this.navigating_to_image = insert_index
@@ -1757,7 +1754,7 @@
           <div v-if="current_task_name==='precise-annotation'">
             <div class="btn-group" >
               <button :disabled="loading" class="btn transparent-btn" @click="previousImage()"><i class="icon icon-back"></i>&nbsp;Back</button>
-              <button class="btn transparent-btn" @click="saveAnnotation()">&nbsp;Save</button>
+              <!--button class="btn transparent-btn" @click="saveAnnotation()">&nbsp;Save</button-->
               <button :disabled="loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>
             </div>
           </div>
