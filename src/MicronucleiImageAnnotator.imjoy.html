@@ -8,7 +8,7 @@
     "type": "window",
     "tags": [],
     "ui": "",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "api_version": "0.1.7",
     "description": "Annotate images for HPA single-cell image classification",
     "icon": "extension",
@@ -201,6 +201,7 @@
     label_display_mode: null,
     channels: null,
     label: null,
+    cell_line: null,
     exclusive_label: false,
     mask_adjusted: false,
     label_changed: false,
@@ -702,6 +703,7 @@
         const response = await this.fetchURLData(image_url)
         imageData.bbox = response.bbox;
         imageData.mask_geojson = response.mask;
+        imageData.cell_line = response.cell_line;
         //ER, Microtubule, Nuclei, Protein,
         imageData.channels = response.images;
         if(!response.available_labels){
@@ -1776,6 +1778,7 @@
           </div>
           <span v-show="!hide_controls" class="h3 floating-label">
             <h5>{{current_image_data.cell_id.split('/')[0]}} </h5>
+            <h6>{{current_image_data.cell_line}}</h6>
           </span>
         </template>
 
@@ -1783,6 +1786,7 @@
           <div v-show="!hide_controls" class="floating-right-btn">
             <div class="columns">
               <h5>{{current_image_data.cell_id.split('/')[0]}} </h5>
+              <h6>{{current_image_data.cell_line}}</h6>
               <template v-for="group in LIMS_LOCATION_LABELS">
                 <template v-for="label in group">
                   <button style="font-size: 12px" :key="label" v-if="LIMS_TO_IF_CSV[label] && current_image_data.location_labels[LIMS_TO_IF_CSV[label]] !== undefined" :disabled="current_image_data.exclusive_label" @click="toggleLabel(LIMS_TO_IF_CSV[label])" class="column btn label-btn" :class="{'selected-label-btn': current_image_data.location_labels[LIMS_TO_IF_CSV[label]]}">{{label.slice(0,12)+(label.length>12?'.': '')}}</button>
@@ -1814,7 +1818,7 @@
             <button :disabled="current_image_data.exclusive_label" class="btn transparent-btn" @click="selectLabel(false)" :class="{'selected-label-btn': current_image_data.location_labels[current_image_data.single_label]===false}"><i class="icon icon-cross"></i>&nbsp;False</button>
             <button :disabled="current_image_index>=cached_image_data.length || loading" class="btn transparent-btn" @click="nextImage()">Next&nbsp;<i class="icon icon-forward"></i></button>
           </div>
-          <span v-show="!hide_controls" class="h3 floating-label">{{current_image_data.single_label}}</span>
+          <span v-show="!hide_controls" class="h3 floating-label">{{current_image_data.single_label}}: {{current_image_data.cell_line}}</span>
         </template>
         <template v-if="current_task_name === 'segmentation'">
           <div v-show="!hide_controls" class="btn-group floating-bottom-btn">
