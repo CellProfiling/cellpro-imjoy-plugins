@@ -118,7 +118,7 @@ class ImJoyPlugin {
                                 this.$forceUpdate()
                                 console.log('===============>', results)
                                 self.umap_data = results.data
-                                self.updateUmap(self.umap_data)
+				console.log(self.umap_data)
                                 resolve()
                             }
                         })
@@ -296,14 +296,14 @@ class ImJoyPlugin {
         filter = (filter || '') && filter.trim()
         const filters = filter.split(' ')
 
-        table = table.filter((row)=>{
-            let ret = false
-            for(let filter of filters){
-                ret = ret || (!filter || row.gene === filter || row['gene_ensembl_id'] === filter || row['cell_line'] === filter || row['id'] === filter || row['location'].includes(filter) )
+        // table = table.filter((row)=>{
+        //     let ret = false
+        //     for(let filter of filters){
+        //         ret = ret || (!filter || row.gene === filter || row['gene_ensembl_id'] === filter || row['cell_line'] === filter || row['id'] === filter || row['location'].includes(filter) )
 
-            }
-            return row.gene && ret
-        })
+        //     }
+        //     return row.gene && ret
+        // })
         this.filtered_table = table;
         console.log('filtered: ', this.filtered_table)
 
@@ -321,7 +321,7 @@ class ImJoyPlugin {
         }
 
         const data = [{
-            type: "scatter3d",
+            type: "scatter",
             mode: "markers",
             marker: {
                 size: 2,
@@ -338,7 +338,7 @@ class ImJoyPlugin {
             x: dataObj.x,
             y: dataObj.y,
             // z: dataObj.z,
-            customdata: table
+            // customdata: table
         }]
         this.plot(data)
     }
